@@ -2,15 +2,17 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>pbm</title>
+        <title>Picture Book Maker</title>
         <link rel="stylesheet" type="text/css" href="../asset/css/pbm.css" />
     </head>
     <body class="noselect">
         <div id="navbar"></div>
         <h1 id="header"></h1>
-        <div id="menu-entries"></div>
+        <div id="current-image" class="current-image"></div>
+        <div id="actions"><button id="crop-button">Crop</button></div>
         <div class="bottom-left-pin" id="loading"></div>
         <div class="bottom-pin-right" id="version"></div>
+        <div id="selection-points"></div>
         <script>
             require('../asset/shared')('landing')
         </script>

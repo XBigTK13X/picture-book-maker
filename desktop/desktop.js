@@ -9,15 +9,10 @@ if (!fs.existsSync(logDirectory)) {
     fs.mkdirSync(logDirectory)
 }
 
-const m3uDirectory = settings.desktopPath('m3u')
-if (!fs.existsSync(m3uDirectory)) {
-    fs.mkdirSync(m3uDirectory)
-}
-
 let mainWindow = null
 
 if (!app.requestSingleInstanceLock()) {
-    util.serverLog('main - An instance of pbm is already running. Exiting the duplicate app.')
+    util.serverLog('main - An instance of Picture Book Maker is already running. Exiting the duplicate app.')
     app.quit()
 } else {
     if (mainWindow) {

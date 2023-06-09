@@ -9,7 +9,7 @@ const desktopPath = (relativePath) => {
 }
 
 let config = {
-    appVersion: '4.0.0',
+    appVersion: '0.0.1',
     versionDate: 'June 07, 2023',
     fullScreen: false,
     debugApiCalls: false,
@@ -20,7 +20,8 @@ let config = {
         loadingMessage: 3000,
         delaySeek: 1000,
     },
-    dataDir: desktopPath('pbm-data/')
+    dataDir: desktopPath('pbm-data/'),
+    imageMagickDir: ''
 }
 
 let overridePath = 'E:\\data\\pbm.json'
