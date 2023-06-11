@@ -43,12 +43,10 @@ module.exports = () => {
             }
         }
 
-        console.log("Building data dir"+query.bookName)
         workspace.prepDir(query.bookName)
 
         $('#current-page').on('click', addToSelection)
         $('#crop-button').on('mousedown', (jQEvent)=>{
-            console.log({button:jQEvent.button})
             const self = $(jQEvent.target)
             const coordinates = new Coordinates()
             coordinates.fromXYPairs(currentSelection)

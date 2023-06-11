@@ -1,6 +1,6 @@
 {
     "name": "picture-book-maker",
-    "version": "3.11.6",
+    "version": "0.0.2",
     "description": "Jellyfin frontend that plays media in an external player.",
     "main": "desktop/desktop.js",
     "scripts": {

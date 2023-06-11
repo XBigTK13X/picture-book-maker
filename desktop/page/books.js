@@ -4,7 +4,9 @@ module.exports = () => {
         const query = util.queryParams()
         const books = require('../data/books')
 
-        let markup = books.getList(query.sourceIndex).map((bookName)=>{
+        const bookList = books.getList(query.sourceIndex)
+
+        let markup = bookList.map((bookName)=>{
             return `
                 <a href="book.html?sourceIndex=${query.sourceIndex}&bookName=${bookName}">
                 <div class="wide-link">
@@ -15,7 +17,7 @@ module.exports = () => {
         }).join('')
 
         document.getElementById('books-list').innerHTML = markup
-        document.getElementById('header').innerHTML = 'Books'
+        document.getElementById('header').innerHTML = `Books (${bookList.length})`
 
         resolve()
     })

@@ -9,8 +9,8 @@ const desktopPath = (relativePath) => {
 }
 
 let config = {
-    appVersion: '0.0.1',
-    versionDate: 'June 07, 2023',
+    appVersion: '0.0.2',
+    versionDate: 'June 11, 2023',
     fullScreen: false,
     debugApiCalls: false,
     interval: {
@@ -22,7 +22,8 @@ let config = {
     },
     dataDir: 'E:/data/pbm/',
     imageMagickDir: '',
-    sourceDirectories: []
+    sourceDirectories: [],
+    maxBookPages: 108
 }
 
 let overridePath = 'E:/data/pbm.js'

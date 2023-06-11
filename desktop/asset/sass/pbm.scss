@@ -546,7 +546,7 @@ table.channel-guide {
 }
 
 .scanned-page {
-    height: 40vh;
+    height: 80vh;
 }
 
 .current-image {
@@ -559,8 +559,18 @@ table.channel-guide {
 }
 
 .page-list-item {
-    width: 9vw;
+    width: 10vw;
+    height: 10vw;
     margin: 5px;
+}
+
+.bounded-item {
+    opacity: 0.50;
+}
+
+.edit-text {
+    width:80%;
+    font-size: 2em;
 }
 
 /*tippy.js - original dist contents*/

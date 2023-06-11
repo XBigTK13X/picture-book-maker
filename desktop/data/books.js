@@ -10,9 +10,15 @@ const getList = (sourceIndex)=>{
     let pagePaths = util.getFiles(sourcePath)
     let books = {}
     for(let page of pagePaths){
-        const book = path.basename(path.dirname(page))
-        if(!_.has(books, book)){
-            books[book] = true
+        if(
+            page.indexOf('.jpeg') !== -1 ||
+            page.indexOf('.jpg') !== -1 ||
+            page.indexOf('.png') !== -1
+        ){
+            const book = path.basename(path.dirname(page))
+            if(!_.has(books, book)){
+                books[book] = true
+            }
         }
     }
     return Object.keys(books)

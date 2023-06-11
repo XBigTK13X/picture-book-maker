@@ -3,8 +3,6 @@ module.exports = () => {
         const settings = require('../../common/settings')
         const sources = require('../data/sources')
 
-        console.log({settings})
-
         let markup = sources.getList().map((directoryPath, index)=>{
             return `
 

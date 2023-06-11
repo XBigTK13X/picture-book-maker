@@ -87,10 +87,6 @@ const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
     const bookName = path.basename(path.dirname(sourceImagePath))
     const bookDirs = workspace.getDirs(bookName)
 
-    console.log({sourceImagePath})
-    console.log({path})
-    console.log({parsed: path.parse(sourceImagePath)})
-
     const convertedPath = path.join(bookDirs.extract, path.parse(sourceImagePath).name + '.jpg')
     if(!cropCoordinates){
         cropCoordinates = new Coordinates()
@@ -125,10 +121,6 @@ const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
         cropCoordinates.bottomLeft.y,
     ]
     */
-   console.log({
-    width: cropCoordinates.width(),
-    height: cropCoordinates.height()
-   })
     const args = [
         'convert',
         '-quality',
@@ -138,7 +130,6 @@ const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
         `${cropCoordinates.width()}x${cropCoordinates.height()}+${cropCoordinates.topLeft.x}+${cropCoordinates.topLeft.y}`,
         `${convertedPath}`
     ]
-    console.log(args.join(', '))
     const magick = spawn(binPath, args, { stdio: 'ignore' })
     magick.on('exit', (code)=>{
         console.log(`ImageMagick finished with code [${code}]`)
