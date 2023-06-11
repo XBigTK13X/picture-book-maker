@@ -20,11 +20,12 @@ let config = {
         loadingMessage: 3000,
         delaySeek: 1000,
     },
-    dataDir: desktopPath('pbm-data/'),
-    imageMagickDir: ''
+    dataDir: 'E:/data/pbm/',
+    imageMagickDir: '',
+    sourceDirectories: []
 }
 
-let overridePath = 'E:\\data\\pbm.json'
+let overridePath = 'E:/data/pbm.js'
 
 if (process.platform === 'linux') {
     overridePath = '/media/trove/share/software/pbm/pbm-overrides.js'

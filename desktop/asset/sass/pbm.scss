@@ -553,6 +553,16 @@ table.channel-guide {
     text-align:center;
 }
 
+.wide-link {
+    width:90vw;
+    margin-bottom:2vh;
+}
+
+.page-list-item {
+    width: 9vw;
+    margin: 5px;
+}
+
 /*tippy.js - original dist contents*/
 
 .tippy-box[data-animation='fade'][data-state='hidden'] {

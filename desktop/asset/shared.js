@@ -75,18 +75,6 @@ module.exports = (pageName, options) => {
         require('../component/navbar').render(options)
 
         require(`../page/${pageName}`)().then((pageOptions) => {
-            util.loadTooltips()
-
-            window.randomChoice = () => {
-                const choices = document.querySelectorAll('[data-target="random-action"]')
-                if (choices && choices.length > 0) {
-                    choices[Math.floor(Math.random() * choices.length)].click()
-                }
-            }
-
-            if (!pageOptions || (pageOptions && !pageOptions.enableRandomChoice)) {
-                document.getElementById('random-choice-button').setAttribute('style', 'display:none')
-            }
             window.$lazyLoad = () => {
                 $('.lazy').Lazy()
             }

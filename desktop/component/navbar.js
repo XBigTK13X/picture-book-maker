@@ -19,11 +19,13 @@ module.exports = {
             `
         }
 
-        navbarContent += `<a id="random-choice-button" style="" href="" onclick="window.randomChoice();return false">
-                <div class="navbar-button">
-                    Random
-                </div>
-            </a>`
+        navbarContent += `
+        <a href="sources.html">
+          <div class="navbar-button">
+            Sources
+          </div>
+        </a>
+        `
 
 
         navbarContent += '</div>'

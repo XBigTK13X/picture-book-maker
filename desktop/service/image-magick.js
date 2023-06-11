@@ -2,6 +2,7 @@ const spawn = require('child_process').spawn
 const util = require('../../common/util')
 const settings = require('../../common/settings')
 const path = require('path')
+const workspace = require('../service/workspace')
 
 let binPath = null
 
@@ -79,12 +80,18 @@ class Coordinates{
     }
 }
 
-const distortAndCrop = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
-    util.serverLog('imageMagick - Running distort and crop')
+const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
     if(!binPath){
         binPath = path.join(settings.imageMagickDir,'magick.exe')
     }
-    const convertedPath = sourceImagePath + '.converted.png'
+    const bookName = path.basename(path.dirname(sourceImagePath))
+    const bookDirs = workspace.getDirs(bookName)
+
+    console.log({sourceImagePath})
+    console.log({path})
+    console.log({parsed: path.parse(sourceImagePath)})
+
+    const convertedPath = path.join(bookDirs.extract, path.parse(sourceImagePath).name + '.jpg')
     if(!cropCoordinates){
         cropCoordinates = new Coordinates()
         // Choose a rentangle inside the lowest value of each bounding box
@@ -124,6 +131,8 @@ const distortAndCrop = (sourceImagePath, selectionCoordinates, cropCoordinates) 
    })
     const args = [
         'convert',
+        '-quality',
+        '95',
         `${sourceImagePath}`,
         '-crop',
         `${cropCoordinates.width()}x${cropCoordinates.height()}+${cropCoordinates.topLeft.x}+${cropCoordinates.topLeft.y}`,
@@ -137,6 +146,6 @@ const distortAndCrop = (sourceImagePath, selectionCoordinates, cropCoordinates) 
 }
 
 module.exports = {
-    distortAndCrop,
+    process,
     Coordinates
 }

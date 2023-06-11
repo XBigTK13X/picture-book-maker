@@ -1,17 +1,11 @@
 const { DateTime } = require('luxon')
 const path = require('path')
 const fs = require('fs')
-const readLine = require('readline')
 const settings = require('../common/settings')
 let logFile = null
-let profiles = null
 
 const browserGetMediaProfiles = () => {
     return require('electron').ipcRenderer.sendSync('pbm-get-media-profiles')
-}
-
-const getMpvStreamConnected = () => {
-    return require('electron').ipcRenderer.sendSync('pbm-get-mpv-stream-connected')
 }
 
 const isClass = (target) => {
@@ -93,6 +87,16 @@ const clientLog = (message) => {
     }
 }
 
+const getFiles = (root) => {
+    const dirs = fs.readdirSync(root, { withFileTypes: true });
+    return dirs.reduce((acc, file) => {
+        const filePath = path.join(root, file.name);
+        return acc.concat(
+            file.isDirectory() ? getFiles(filePath) : filePath
+        );
+    }, []);
+}
+
 const delay = (handler) => {
     setTimeout(handler, 0)
 }
@@ -129,7 +133,7 @@ module.exports = {
     clientLog,
     delay,
     getCaller,
-    getMpvStreamConnected,
+    getFiles,
     isClass,
     loadTooltips,
     queryParams,

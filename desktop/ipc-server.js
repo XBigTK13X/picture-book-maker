@@ -16,7 +16,7 @@ class IpcServer {
 
         this.ipcMain.on('pbm-im-distort-and-crop', async (event, options) =>{
             util.serverLog(`Crop and distort [${options.inputFilePath}]`)
-            imageMagick.distortAndCrop(options.inputFilePath,options.selectionCoordinates,options.cropCoordinates)
+            imageMagick.process(options.inputFilePath,options.selectionCoordinates,options.cropCoordinates)
         })
 
         process.on('exit', function () {
