@@ -546,7 +546,7 @@ table.channel-guide {
 }
 
 .scanned-page {
-    height: 80vh;
+    height: 70vh;
 }
 
 .current-image {
@@ -571,6 +571,11 @@ table.channel-guide {
 .edit-text {
     width:80%;
     font-size: 2em;
+}
+
+button {
+    width: 6vw;
+    height: 3vw;
 }
 
 /*tippy.js - original dist contents*/

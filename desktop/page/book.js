@@ -6,11 +6,15 @@ module.exports = () => {
         const query = util.queryParams()
         const book = require('../data/book')
         const settings = require('../../common/settings')
+        const workspace = require('../service/workspace')
 
         const RIGHT_CLICK = 2
 
-        const pages = book.getPages(query.sourceIndex, query.bookName)
+        workspace.prepDir(query.bookName)
+        // Prep the info JSON file
+        const bookInfo = book.getInfo(query.sourceIndex, query.bookName)
 
+        const pages = book.getPages(query.sourceIndex, query.bookName)
 
         const renderPages = (selections)=>{
             if(!!selections){

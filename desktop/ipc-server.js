@@ -1,6 +1,4 @@
 const { ipcMain } = require('electron')
-const spawn = require('child_process').spawn
-const settings = require('../common/settings')
 const util = require('../common/util')
 const imageMagick = require('./service/image-magick')
 
@@ -14,9 +12,9 @@ class IpcServer {
             util.serverLog(message)
         })
 
-        this.ipcMain.on('pbm-im-distort-and-crop', async (event, options) =>{
-            util.serverLog(`Crop and distort [${options.inputFilePath}]`)
-            imageMagick.process(options.inputFilePath,options.selectionCoordinates,options.cropCoordinates)
+        this.ipcMain.on('pbm-process-book', async (event, options) =>{
+            util.serverLog(`Processing [${options.bookName}]`)
+            //imageMagick.process(options.inputFilePath,options.selectionCoordinates,options.cropCoordinates)
         })
 
         process.on('exit', function () {
