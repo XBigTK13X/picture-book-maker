@@ -22,7 +22,11 @@ let config = {
     dataDir: 'E:/data/pbm/',
     imageMagickDir: '',
     sourceDirectories: [],
-    maxBookPages: 108
+    maxBookPages: 108,
+    exportQuality: '95%',
+    spawnOptions: {
+        stdio: 'ignore'
+    }
 }
 
 let overridePath = 'E:/data/pbm.js'

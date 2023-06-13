@@ -14,7 +14,6 @@ module.exports = () => {
         const book = require('../data/book')
         const coordinates = require('../service/coordinates')
 
-
         let markup = `<img id="current-page" class="scanned-page" src="file://${query.image}" />`
 
         let versionMarkup = `<p>v${settings.appVersion} built ${settings.versionDate}</p>`
@@ -103,11 +102,10 @@ module.exports = () => {
 
             $('#current-page').on('mousedown', clickImage)
             $('#process-button').on('click', (jQEvent)=>{
-                const coordinates = new Coordinates()
-                coordinates.fromXYPairs(currentSelection)
                 require('electron').ipcRenderer.send(
                     'pbm-process-book',
                     {
+                        sourceIndex: query.sourceIndex,
                         bookName: query.bookName
                     }
                 )

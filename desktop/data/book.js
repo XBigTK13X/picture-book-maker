@@ -53,7 +53,7 @@ const getInfo = (sourceIndex, bookName) => {
         }
         sortIndex += 1
     }
-    info.reverseIndex = Math.floor(pages.length / 2)
+    info.reverseIndex = Math.floor(pages.length / 2)-1
     fs.writeFileSync(infoPath, info.toJson())
     return info
 }

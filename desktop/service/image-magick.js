@@ -80,16 +80,16 @@ class Coordinates{
     }
 }
 
-const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
-    if(!binPath){
-        binPath = path.join(settings.imageMagickDir,'magick.exe')
-    }
-    const bookName = path.basename(path.dirname(sourceImagePath))
-    const bookDirs = workspace.getDirs(bookName)
-
-    const convertedPath = path.join(bookDirs.extract, path.parse(sourceImagePath).name + '.jpg')
-    if(!cropCoordinates){
-        cropCoordinates = new Coordinates()
+// Current strategy is to crop the interior rectangle of the coordinates.
+// In the future, I would like a strategy that deforms the selection to fit a desired output size.
+const crop = (inputPath, rawCoordinates, outputPath) => {
+    return new Promise((resolve,reject)=>{
+        if(!binPath){
+            binPath = path.join(settings.imageMagickDir,'magick.exe')
+        }
+        let selectionCoordinates = new Coordinates()
+        selectionCoordinates.fromXYPairs(rawCoordinates)
+        let cropCoordinates = new Coordinates()
         // Choose a rentangle inside the lowest value of each bounding box
         let lowX = selectionCoordinates.topLeft.x > selectionCoordinates.bottomLeft.x ? selectionCoordinates.topLeft.x : selectionCoordinates.bottomLeft.x
         let lowY = selectionCoordinates.topLeft.y > selectionCoordinates.topRight.y ? selectionCoordinates.topLeft.y : selectionCoordinates.topRight.y
@@ -99,44 +99,60 @@ const process = (sourceImagePath, selectionCoordinates, cropCoordinates) => {
         cropCoordinates.setTopRight(highX, lowY)
         cropCoordinates.setBottomRight(highX, highY)
         cropCoordinates.setBottomLeft(lowX, highY)
-    }
-    /* Attempted to use distort for a better fit, but it runs way too slow
-    // https://stackoverflow.com/questions/50149907/imagemagick-skew-image-with-4-x-y-coordinates
-    const transform_coordinates = [
-        selectionCoordinates.topLeft.x,
-        selectionCoordinates.topLeft.y,
-        cropCoordinates.topLeft.x,
-        cropCoordinates.topLeft.y,
-        selectionCoordinates.topRight.x,
-        selectionCoordinates.topRight.y,
-        cropCoordinates.topRight.x,
-        cropCoordinates.topRight.y,
-        selectionCoordinates.bottomRight.x,
-        selectionCoordinates.bottomRight.y,
-        cropCoordinates.bottomRight.x,
-        cropCoordinates.bottomRight.y,
-        selectionCoordinates.bottomLeft.x,
-        selectionCoordinates.bottomLeft.y,
-        cropCoordinates.bottomLeft.x,
-        cropCoordinates.bottomLeft.y,
-    ]
-    */
-    const args = [
-        'convert',
-        '-quality',
-        '95',
-        `${sourceImagePath}`,
-        '-crop',
-        `${cropCoordinates.width()}x${cropCoordinates.height()}+${cropCoordinates.topLeft.x}+${cropCoordinates.topLeft.y}`,
-        `${convertedPath}`
-    ]
-    const magick = spawn(binPath, args, { stdio: 'ignore' })
-    magick.on('exit', (code)=>{
-        console.log(`ImageMagick finished with code [${code}]`)
+        const args = [
+            'convert',
+            '-quality',
+            settings.exportQuality,
+            `${inputPath}`,
+            '-crop',
+            `${cropCoordinates.width()}x${cropCoordinates.height()}+${cropCoordinates.topLeft.x}+${cropCoordinates.topLeft.y}`,
+            `${outputPath}`
+        ]
+        const magick = spawn(binPath, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
+const rotate = (inputPath, rotationDegrees, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            'convert',
+            '-quality',
+            '100%',
+            inputPath,
+            '-rotate',
+            rotationDegrees,
+            outputPath
+        ]
+        const magick = spawn(binPath, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
+const stitch = (firstImage, secondImage, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            'convert',
+            '-quality',
+            '100%',
+            '+append',
+            firstImage,
+            secondImage,
+            outputPath
+        ]
+        const magick = spawn(binPath, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
     })
 }
 
 module.exports = {
-    process,
-    Coordinates
+    crop,
+    rotate,
+    stitch
 }

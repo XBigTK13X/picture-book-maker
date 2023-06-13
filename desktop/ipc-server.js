@@ -1,6 +1,8 @@
 const { ipcMain } = require('electron')
 const util = require('../common/util')
-const imageMagick = require('./service/image-magick')
+const bookMaker = require('./service/book-maker')
+const book = require('./data/book')
+const workspace = require('./service/workspace')
 
 class IpcServer {
     constructor() {
@@ -14,7 +16,21 @@ class IpcServer {
 
         this.ipcMain.on('pbm-process-book', async (event, options) =>{
             util.serverLog(`Processing [${options.bookName}]`)
-            //imageMagick.process(options.inputFilePath,options.selectionCoordinates,options.cropCoordinates)
+            const bookInfo = book.getInfo(options.sourceIndex, options.bookName)
+            const workDirs = workspace.getDirs(options.bookName)
+            util.serverLog(`Extracting [${options.bookName}]`)
+            return bookMaker.extract(bookInfo, workDirs)
+            .then(()=>{
+                util.serverLog(`Stitching [${options.bookName}]`)
+                bookMaker.stitch(bookInfo, workDirs)
+            })
+            .then(()=>{
+                util.serverLog(`Archiving [${options.bookName}]`)
+                bookMaker.archive(bookInfo, workDirs)
+            })
+            .then(()=>{
+                util.serverLog(`Finished [${options.bookName}]`)
+            })
         })
 
         process.on('exit', function () {

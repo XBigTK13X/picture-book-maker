@@ -4,7 +4,7 @@ module.exports = () => {
         const _ = require('lodash')
         const Coordinates = require('../service/image-magick').Coordinates
         const settings = require('../../common/settings')
-        let markup = '<a href="page.html?sourceIndex=0&bookName=snaps&image=E:\\media\\book\\raw\\shopped\\CameraSnaps\\snaps\\PXL_20230608_144149693.jpg">Debug Page</a>'
+        let markup = '<a href="page.html?sourceIndex=1&bookName=Excavator%27s%20123%20-%20Sherri%20Rinker&image=E:\\media\\book\\raw\\shopped\\CameraSnaps\\test\\Excavator%27s%20123%20-%20Sherri%20Rinker\\PXL_20230608_143649989.jpg">Debug Page</a>'
 
         let versionMarkup = `<p>v${settings.appVersion} built ${settings.versionDate}</p>`
         if (settings.newVersionAvailable) {
