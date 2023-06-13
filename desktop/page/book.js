@@ -12,7 +12,7 @@ module.exports = () => {
 
         workspace.prepDir(query.bookName)
         // Prep the info JSON file
-        const bookInfo = book.getInfo(query.sourceIndex, query.bookName)
+        book.getInfo(query.sourceIndex, query.bookName)
 
         const pages = book.getPages(query.sourceIndex, query.bookName)
 

@@ -1,13 +1,16 @@
 const LEFT_CLICK = 0
+const MIDDLE_CLICK = 1
 const RIGHT_CLICK = 2
 
 const TARGET_WIDTH = 22
+
+const BRACKET_LEFT = 219
+const BRACKET_RIGHT = 221
 
 module.exports = () => {
     return new Promise((resolve, reject) => {
         const util = require('../../common/util')
         const _ = require('lodash')
-        const Coordinates = require('../service/image-magick').Coordinates
         const settings = require('../../common/settings')
         const query = util.queryParams()
         query.sourceIndex = parseInt(query.sourceIndex, 10)
@@ -26,6 +29,25 @@ module.exports = () => {
 
         //Without this, the loaded selection points won't display properly since the image width is still 0
         setTimeout(()=>{
+            const pages = book.getPages(query.sourceIndex, query.bookName)
+            let previousPage = null
+            let nextPage = null
+            for(let ii = 0; ii < pages.length; ii++){
+                const page = pages[ii]
+                if(page === query.image){
+                    if(ii === 0){
+                        previousPage = pages[pages.length - 1]
+                    } else {
+                        previousPage = pages[ii - 1]
+                    }
+                    if(ii === pages.length - 1){
+                        nextPage = pages[0]
+                    }
+                    else {
+                        nextPage = pages[ii + 1]
+                    }
+                }
+            }
             bookInfo = book.getInfo(query.sourceIndex, query.bookName)
             let selectionMarkup = ''
             let currentSelection = bookInfo.getSelection(query.image) || []
@@ -52,18 +74,39 @@ module.exports = () => {
                         selectionMarkup = ''
                         document.getElementById('selection-points').innerHTML = selectionMarkup
                     }
-                    const points = coordinates.windowToElement(jQEvent)
-                    currentSelection.push({x: points.element.x, y: points.element.y})
-                    selectionMarkup += `
-                        <div style="position: absolute;
-                                    left: ${points.window.x - TARGET_WIDTH}px;
-                                    top: ${points.window.y - TARGET_WIDTH}px;
-                                    opacity: 0.75;">
-                            <img src="../asset/img/target.png"/>
-                        </div>
-                    `
+                    else {
+                        const points = coordinates.windowToElement(jQEvent)
+                        currentSelection.push({x: points.element.x, y: points.element.y})
+                        selectionMarkup += `
+                            <div style="position: absolute;
+                                        left: ${points.window.x - TARGET_WIDTH}px;
+                                        top: ${points.window.y - TARGET_WIDTH}px;
+                                        opacity: 0.75;">
+                                <img src="../asset/img/target.png"/>
+                            </div>
+                        `
+                        book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
+                        document.getElementById('selection-points').innerHTML = selectionMarkup
+                    }
+                }
+                if(jQEvent.button === MIDDLE_CLICK){
+                    currentSelection = bookInfo.getSelection(previousPage) || []
+                    selectionMarkup = ''
+                    if(currentSelection.length > 0){
+                        for(let coord of currentSelection){
+                            let translatedCoords = coordinates.elementToWindow(coord.x, coord.y, imageElement)
+                            selectionMarkup += `
+                            <div style="position: absolute;
+                                        left: ${translatedCoords.window.x - TARGET_WIDTH}px;
+                                        top: ${translatedCoords.window.y - TARGET_WIDTH}px;
+                                        opacity: 0.75;">
+                                <img src="../asset/img/target.png"/>
+                            </div>
+                        `
+                        }
+                        document.getElementById('selection-points').innerHTML = selectionMarkup
+                    }
                     book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
-                    document.getElementById('selection-points').innerHTML = selectionMarkup
                 }
                 if(jQEvent.button === RIGHT_CLICK){
                     let centerX = 0
@@ -78,7 +121,7 @@ module.exports = () => {
                     const mouseDeltaX = points.element.x - centerX
                     const mouseDeltaY = points.element.y - centerY
                     let newSelection = []
-                    let selectionMarkup = ''
+                    selectionMarkup = ''
                     for(let coord of currentSelection){
                         const points = coordinates.elementToWindow(coord.x + mouseDeltaX, coord.y + mouseDeltaY, imageElement)
                         newSelection.push({
@@ -87,8 +130,8 @@ module.exports = () => {
                         })
                         selectionMarkup += `
                         <div style="position: absolute;
-                                    left: ${points.window.x}px;
-                                    top: ${points.window.y}px;
+                                    left: ${points.window.x - TARGET_WIDTH}px;
+                                    top: ${points.window.y - TARGET_WIDTH}px;
                                     opacity: 0.75;">
                             <img src="../asset/img/target.png"/>
                         </div>
@@ -109,6 +152,17 @@ module.exports = () => {
                         bookName: query.bookName
                     }
                 )
+            })
+
+            $(document).ready(function(){
+                $(this).on('keydown',(jQEvent)=>{
+                    if(jQEvent.which === BRACKET_LEFT){
+                        window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${previousPage}`
+                    }
+                    if(jQEvent.which === BRACKET_RIGHT){
+                        window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${nextPage}`
+                    }
+                })
             })
 
             resolve()

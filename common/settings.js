@@ -23,7 +23,6 @@ let config = {
     imageMagickDir: '',
     sourceDirectories: [],
     maxBookPages: 108,
-    exportQuality: '95%',
     spawnOptions: {
         stdio: 'ignore'
     }
@@ -43,6 +42,7 @@ if (fs.existsSync(overridePath)) {
     config = _.merge(config, overrides)
 }
 
+config.imageMagickBinary = path.join(config.imageMagickDir, 'magick.exe')
 
 config.desktopPath = desktopPath
 

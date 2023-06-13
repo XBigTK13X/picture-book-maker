@@ -1,10 +1,5 @@
 const spawn = require('child_process').spawn
-const util = require('../../common/util')
 const settings = require('../../common/settings')
-const path = require('path')
-const workspace = require('../service/workspace')
-
-let binPath = null
 
 class Coordinates{
     constructor(){
@@ -80,35 +75,74 @@ class Coordinates{
     }
 }
 
+const pairsToCoordinates = (xyPairs)=>{
+    let selection = new Coordinates()
+    selection.fromXYPairs(xyPairs)
+    let interiorFit = new Coordinates()
+    // Choose a rentangle inside the bounding box
+    let lowX = selection.topLeft.x > selection.bottomLeft.x ? selection.topLeft.x : selection.bottomLeft.x
+    let lowY = selection.topLeft.y > selection.topRight.y ? selection.topLeft.y : selection.topRight.y
+    let highX = selection.topRight.x < selection.bottomRight.x ? selection.topRight.x : selection.bottomRight.x
+    let highY = selection.bottomLeft.y < selection.bottomRight.y ? selection.bottomLeft.y : selection.bottomRight.y
+    interiorFit.setTopLeft(lowX, lowY)
+    interiorFit.setTopRight(highX, lowY)
+    interiorFit.setBottomRight(highX, highY)
+    interiorFit.setBottomLeft(lowX, highY)
+    return {
+        interiorFit: interiorFit,
+        selection: selection
+    }
+}
+
+// https://legacy.imagemagick.org/Usage/distorts/#perspective
+// https://stackoverflow.com/questions/12276098/understanding-perspective-projection-distortion-imagemagick
+const distortPerspective = (inputPath, rawCoordinates, outputPath) =>{
+    return new Promise((resolve)=>{
+        let coordinates = pairsToCoordinates(rawCoordinates)
+        let coordMap = [
+            coordinates.selection.topLeft.x+','+coordinates.selection.topLeft.y,
+            coordinates.interiorFit.topLeft.x+','+coordinates.interiorFit.topLeft.y,
+            coordinates.selection.topRight.x+','+coordinates.selection.topRight.y,
+            coordinates.interiorFit.topRight.x+','+coordinates.interiorFit.topRight.y,
+            coordinates.selection.bottomRight.x+','+coordinates.selection.bottomRight.y,
+            coordinates.interiorFit.bottomRight.x+','+coordinates.interiorFit.bottomRight.y,
+            coordinates.selection.bottomLeft.x+','+coordinates.selection.bottomLeft.y,
+            coordinates.interiorFit.bottomLeft.x+','+coordinates.interiorFit.bottomLeft.y,
+        ]
+        const args = [
+            'convert',
+            '-quality',
+            '100%',
+            `${inputPath}`,
+            '-distort',
+            'perspective',
+            coordMap.join(' '),
+            '-virtual-pixel',
+            'Black',
+            `${outputPath}`
+        ]
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
 // Current strategy is to crop the interior rectangle of the coordinates.
 // In the future, I would like a strategy that deforms the selection to fit a desired output size.
 const crop = (inputPath, rawCoordinates, outputPath) => {
     return new Promise((resolve,reject)=>{
-        if(!binPath){
-            binPath = path.join(settings.imageMagickDir,'magick.exe')
-        }
-        let selectionCoordinates = new Coordinates()
-        selectionCoordinates.fromXYPairs(rawCoordinates)
-        let cropCoordinates = new Coordinates()
-        // Choose a rentangle inside the lowest value of each bounding box
-        let lowX = selectionCoordinates.topLeft.x > selectionCoordinates.bottomLeft.x ? selectionCoordinates.topLeft.x : selectionCoordinates.bottomLeft.x
-        let lowY = selectionCoordinates.topLeft.y > selectionCoordinates.topRight.y ? selectionCoordinates.topLeft.y : selectionCoordinates.topRight.y
-        let highX = selectionCoordinates.topRight.x < selectionCoordinates.bottomRight.x ? selectionCoordinates.topRight.x : selectionCoordinates.bottomRight.x
-        let highY = selectionCoordinates.bottomLeft.y < selectionCoordinates.bottomRight.y ? selectionCoordinates.bottomLeft.y : selectionCoordinates.bottomRight.y
-        cropCoordinates.setTopLeft(lowX, lowY)
-        cropCoordinates.setTopRight(highX, lowY)
-        cropCoordinates.setBottomRight(highX, highY)
-        cropCoordinates.setBottomLeft(lowX, highY)
+        let coordinates = pairsToCoordinates(rawCoordinates)
         const args = [
             'convert',
             '-quality',
-            settings.exportQuality,
+            '100%',
             `${inputPath}`,
             '-crop',
-            `${cropCoordinates.width()}x${cropCoordinates.height()}+${cropCoordinates.topLeft.x}+${cropCoordinates.topLeft.y}`,
+            `${coordinates.interiorFit.width()}x${coordinates.interiorFit.height()}+${coordinates.interiorFit.topLeft.x}+${coordinates.interiorFit.topLeft.y}`,
             `${outputPath}`
         ]
-        const magick = spawn(binPath, args, settings.spawnOptions)
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
         magick.on('exit', (code)=>{
             resolve()
         })
@@ -126,7 +160,7 @@ const rotate = (inputPath, rotationDegrees, outputPath)=>{
             rotationDegrees,
             outputPath
         ]
-        const magick = spawn(binPath, args, settings.spawnOptions)
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
         magick.on('exit', (code)=>{
             resolve()
         })
@@ -144,7 +178,23 @@ const stitch = (firstImage, secondImage, outputPath)=>{
             secondImage,
             outputPath
         ]
-        const magick = spawn(binPath, args, settings.spawnOptions)
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
+const convert = (inputPath, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            'convert',
+            '-quality',
+            '100%',
+            inputPath,
+            outputPath
+        ]
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
         magick.on('exit', (code)=>{
             resolve()
         })
@@ -152,7 +202,9 @@ const stitch = (firstImage, secondImage, outputPath)=>{
 }
 
 module.exports = {
+    convert,
     crop,
+    distortPerspective,
     rotate,
     stitch
 }
