@@ -21,6 +21,7 @@ let config = {
     },
     dataDir: 'E:/data/pbm/',
     imageMagickDir: '',
+    imageMagcikBinary: null,
     sourceDirectories: [],
     maxBookPages: 108,
     spawnOptions: {

@@ -96,7 +96,7 @@ const pairsToCoordinates = (xyPairs)=>{
 
 // https://legacy.imagemagick.org/Usage/distorts/#perspective
 // https://stackoverflow.com/questions/12276098/understanding-perspective-projection-distortion-imagemagick
-const distortPerspective = (inputPath, rawCoordinates, outputPath) =>{
+const distort = (inputPath, rawCoordinates, outputPath) =>{
     return new Promise((resolve)=>{
         let coordinates = pairsToCoordinates(rawCoordinates)
         let coordMap = [
@@ -128,8 +128,6 @@ const distortPerspective = (inputPath, rawCoordinates, outputPath) =>{
     })
 }
 
-// Current strategy is to crop the interior rectangle of the coordinates.
-// In the future, I would like a strategy that deforms the selection to fit a desired output size.
 const crop = (inputPath, rawCoordinates, outputPath) => {
     return new Promise((resolve,reject)=>{
         let coordinates = pairsToCoordinates(rawCoordinates)
@@ -201,10 +199,27 @@ const convert = (inputPath, outputPath)=>{
     })
 }
 
+const resize = (inputPath, width, height, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            'convert',
+            inputPath,
+            '-resize',
+            `${width}x${height}\!`,
+            outputPath
+        ]
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
 module.exports = {
     convert,
     crop,
-    distortPerspective,
+    distort,
+    resize,
     rotate,
     stitch
 }

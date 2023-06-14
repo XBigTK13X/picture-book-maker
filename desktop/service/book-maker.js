@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const sizeOf = require('image-size')
 const imageMagick = require('./image-magick')
 const util = require('../../common/util')
 
@@ -52,7 +53,7 @@ const extract = (bookInfo, workDirs)=>{
             const page = bookInfo.pages[pageKey]
             const inputPath = page.filePath
             const outputPath = path.join(workDirs.extract, distortedFile(page.sortIndex))
-            promises.push(()=>{return {promise: imageMagick.distortPerspective(inputPath, page.selection, outputPath), message: `Distort image ${distortIndex++} of ${pageKeys.length}`}})
+            promises.push(()=>{return {promise: imageMagick.distort(inputPath, page.selection, outputPath), message: `Distort image ${distortIndex++} of ${pageKeys.length}`}})
         }
         await batch(promises, BATCH_SIZE)
         let cropIndex = 1
@@ -98,11 +99,34 @@ const stitch = (bookInfo, workDirs)=>{
         files.sort()
         const firstPageOutput = path.join(workDirs.stitch, stitchedFile(0))
         await imageMagick.convert(files[0], firstPageOutput)
+        let min = {
+            height: 1000000,
+            width:  1000000
+        }
+        for(let ii = 1; ii < files.length-1; ii++){
+            const dimensions = sizeOf(files[ii])
+            if(dimensions.width < min.width){
+                min.width = dimensions.width
+            }
+            if(dimensions.height < min.height){
+                min.height = dimensions.height
+            }
+        }
+
+        util.serverLog(`Found a minimum image size of ${min.width} x ${min.height}`)
+
         for(let ii = 1; ii < Math.floor(files.length / 2) - 1; ii++){
-            const leftPage = files[Math.floor(ii+files.length/2)-1]
+            const leftPageIndex = Math.floor(ii+files.length/2)-1
+            const leftPage = files[leftPageIndex]
             const rightPage = files[ii]
+            const leftPageResized = leftPage + '.resized.jpg'
+            const rightPageResized = rightPage + '.resized.jpg'
+            util.serverLog(`Resizing images ${ii} and ${leftPageIndex}`)
+            await imageMagick.resize(leftPage, min.width, min.height, leftPageResized)
+            await imageMagick.resize(rightPage, min.width, min.height, rightPageResized)
             const outputFile = path.join(workDirs.stitch, stitchedFile(ii))
-            await imageMagick.stitch(leftPage, rightPage, outputFile)
+            util.serverLog(`Stitching images ${ii} and ${leftPageIndex}`)
+            await imageMagick.stitch(leftPageResized, rightPageResized, outputFile)
         }
         if(files.length % 2 === 0){
             const lastPageOutput = path.join(workDirs.stitch, stitchedFile(files.length + 5))
@@ -117,7 +141,7 @@ const archive = (bookInfo, workDirs)=>{
 }
 
 module.exports = {
+    archive,
     extract,
-    stitch,
-    archive
+    stitch
 }

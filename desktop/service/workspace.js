@@ -8,6 +8,9 @@ const stitchDir = '20-stitch'
 const exportDir = '30-export'
 
 const prepDir = (bookName) => {
+    if(!bookName){
+        return null
+    }
     if (!fs.existsSync(settings.dataDir)){
         fs.mkdirSync(settings.dataDir);
     }
@@ -26,6 +29,9 @@ const prepDir = (bookName) => {
 }
 
 const getDirs = (bookName) => {
+    if(!bookName){
+        return null
+    }
     return {
         info: path.join(settings.dataDir,'work/', bookName+'/', infoDir+'/'),
         extract: path.join(settings.dataDir,'work/', bookName+'/', extractDir+'/'),
@@ -34,7 +40,21 @@ const getDirs = (bookName) => {
     }
 }
 
+const clean = (bookName) => {
+    if(!bookName){
+        return null
+    }
+    const dirs = getDirs(bookName)
+    fs.rmSync(dirs.extract, {recursive: true, force: true})
+    fs.rmSync(dirs.stitch, {recursive: true, force: true})
+    fs.rmSync(dirs.export, {recursive: true, force: true})
+    fs.mkdirSync(dirs.extract)
+    fs.mkdirSync(dirs.stitch)
+    fs.mkdirSync(dirs.export)
+}
+
 module.exports = {
+    clean,
     getDirs,
     prepDir
 }
