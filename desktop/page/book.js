@@ -12,7 +12,7 @@ module.exports = () => {
 
         workspace.prepDir(query.bookName)
         // Prep the info JSON file
-        book.getInfo(query.sourceIndex, query.bookName)
+        const bookInfo = book.getInfo(query.sourceIndex, query.bookName)
 
         const pages = book.getPages(query.sourceIndex, query.bookName)
 
@@ -61,6 +61,10 @@ module.exports = () => {
             <input id="book-move-target" type="text" class="edit-text" placeholder="New book name" value="${query.bookName}" />
             <button id="book-move-action">Move Selection</button>
             <button id="book-rename-action">Rename Book</button>
+            <br/>
+            <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
+            <button id="book-set-category-action">Set Category</button>
+            <button id="process-action">Process Book</button>
         `
 
         renderPages([])
@@ -92,6 +96,24 @@ module.exports = () => {
                 book.movePages(query.sourceIndex, query.bookName, newBookName, pages)
                 window.location.href = "book.html?"+util.queryString(params)
             }
+        })
+
+        $('#book-set-category-action').on('click', (jQEvent)=>{
+            const textElement = $('#book-category')
+            const category = textElement.val()
+            if(category && category !== bookInfo.category){
+                book.setCategory(query.sourceIndex, query.bookName, category)
+            }
+        })
+
+        $('#process-action').on('click', (jQEvent)=>{
+            require('electron').ipcRenderer.send(
+                'pbm-process-book',
+                {
+                    sourceIndex: query.sourceIndex,
+                    bookName: query.bookName
+                }
+            )
         })
 
         resolve()

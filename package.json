@@ -1,7 +1,7 @@
 {
     "name": "picture-book-maker",
-    "version": "1.0.0",
-    "description": "Jellyfin frontend that plays media in an external player.",
+    "version": "1.0.1",
+    "description": "Convert directories of images into readable book archives.",
     "main": "desktop/desktop.js",
     "scripts": {
         "start": "electron .",

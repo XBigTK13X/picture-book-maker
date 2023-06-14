@@ -52,6 +52,17 @@ module.exports = () => {
                     `
                 }).join('')
                 document.getElementById('content').innerHTML = markup
+            } else {
+                let markup = allBooks.map((book)=>{
+                    return `
+                        <a href="book.html?sourceIndex=${book.sourceIndex}&bookName=${book.bookName}">
+                        <div class="wide-link">
+                                ${book.bookName} (${book.sourceDirPath})
+                                </div>
+                        </a>
+                    `
+                }).join('')
+                document.getElementById('content').innerHTML = markup
             }
         })
 

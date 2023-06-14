@@ -63,7 +63,6 @@ const getInfo = (sourceIndex, bookName) => {
         }
         sortIndex += 1
     }
-    info.reverseIndex = Math.floor(pages.length / 2)-1
     fs.writeFileSync(infoPath, info.toJson())
     return info
 }
@@ -77,9 +76,19 @@ const setSelection = (sourceIndex, bookName, pagePath, selection) => {
     return info
 }
 
+const setCategory = (sourceIndex, bookName, category) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.setCategory(category)
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
     getInfo,
-    setSelection
+    setSelection,
+    setCategory
 }

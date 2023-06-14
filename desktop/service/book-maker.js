@@ -17,20 +17,8 @@ const ROTATION_LOOKUP = {
 const WORK_FORMAT = '.jpg'
 const EXPORT_FORMAT = '.jpg'
 
-const distortedFile = (sortIndex)=>{
-    return 'distort-'+(""+((sortIndex + 2) * 10)).padStart(6, '0') + WORK_FORMAT
-}
-
-const croppedFile = (sortIndex)=>{
-    return 'crop-'+(""+((sortIndex + 2) * 10)).padStart(6, '0') + WORK_FORMAT
-}
-
-const extractedFile = (sortIndex)=>{
-    return (""+((sortIndex + 2) * 10)).padStart(6, '0') + WORK_FORMAT
-}
-
-const stitchedFile = (sortIndex)=>{
-    return (""+((sortIndex + 5) * 10)).padStart(6, '0') + EXPORT_FORMAT
+const workFile = (sortIndex, format)=>{
+    return (""+((sortIndex + 5) * 10)).padStart(6, '0') + (format?format:WORK_FORMAT)
 }
 
 const batch = (promiseMakers, chunk)=>{
@@ -52,44 +40,55 @@ const extract = (bookInfo, workDirs)=>{
         const pageKeys = Object.keys(bookInfo.pages)
         let distortIndex = 1
         let promises = []
+        const distortDir = path.join(workDirs.extract,'distort/')
+        if(!fs.existsSync(distortDir)){
+            fs.mkdirSync(distortDir)
+        }
         for(let pageKey of pageKeys){
             const page = bookInfo.pages[pageKey]
             const inputPath = page.filePath
-            const outputPath = path.join(workDirs.extract, distortedFile(page.sortIndex))
-            promises.push(()=>{return {promise: imageMagick.distort(inputPath, page.selection, outputPath), message: `Distort image ${distortIndex++} of ${pageKeys.length}`}})
+            const outputPath = path.join(distortDir, workFile(page.sortIndex))
+            promises.push(()=>{return {
+                promise: imageMagick.distort(inputPath, page.selection, outputPath),
+                message: `Distort image ${distortIndex++} of ${pageKeys.length}`
+            }})
         }
         await batch(promises, BATCH_SIZE)
         let cropIndex = 1
         promises = []
+        const cropDir = path.join(workDirs.extract, 'crop/')
+        if(!fs.existsSync(cropDir)){
+            fs.mkdirSync(cropDir)
+        }
         for(let pageKey of pageKeys){
             const page = bookInfo.pages[pageKey]
-            const inputPath = path.join(workDirs.extract, distortedFile(page.sortIndex))
-            const outputPath = path.join(workDirs.extract, croppedFile(page.sortIndex))
-            promises.push(()=>{return {promise: imageMagick.crop(inputPath, page.selection, outputPath), message: `Crop image ${cropIndex++} of ${pageKeys.length}`}})
+            const inputPath = path.join(distortDir, workFile(page.sortIndex))
+            const outputPath = path.join(cropDir, workFile(page.sortIndex))
+            promises.push(()=>{return {
+                promise: imageMagick.crop(inputPath, page.selection, outputPath),
+                message: `Crop image ${cropIndex++} of ${pageKeys.length}`
+            }})
         }
         await batch(promises, BATCH_SIZE)
         let rotateIndex = 1
         promises = []
+        const reverseIndex = bookInfo.getReverseIndex()
+        const rotateDir = path.join(workDirs.extract, 'rotate/')
+        if(!fs.existsSync(rotateDir)){
+            fs.mkdirSync(rotateDir)
+        }
         for(let pageKey of pageKeys){
             const page = bookInfo.pages[pageKey]
             let rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-            if(page.sortIndex > bookInfo.reverseIndex){
+            if(page.sortIndex > reverseIndex){
                 rotation += 180
             }
-            const inputPath = path.join(workDirs.extract, croppedFile(page.sortIndex))
-            const outputPath = path.join(workDirs.extract, extractedFile(page.sortIndex))
+            const inputPath = path.join(cropDir, workFile(page.sortIndex))
+            const outputPath = path.join(rotateDir, workFile(page.sortIndex))
             promises.push(()=>{return {
                 message: `Rotate image ${rotateIndex++} of ${pageKeys.length}`,
                 promise: imageMagick.rotate(inputPath, rotation, outputPath)
-                    .then(()=>{
-                        return new Promise((deleteResolve)=>{
-                            fs.rmSync(path.join(workDirs.extract, distortedFile(page.sortIndex)))
-                            fs.rmSync(path.join(workDirs.extract, croppedFile(page.sortIndex)))
-                            deleteResolve()
-                        })
-                    }),
-                }
-            })
+            }})
         }
         await batch(promises, BATCH_SIZE)
         resolve()
@@ -98,9 +97,17 @@ const extract = (bookInfo, workDirs)=>{
 
 const stitch = (bookInfo, workDirs)=>{
     return new Promise(async (resolve)=>{
-        const files = util.getFiles(workDirs.extract)
+        const files = util.getFiles(path.join(workDirs.extract,'rotate/'))
         files.sort()
-        const firstPageOutput = path.join(workDirs.stitch, stitchedFile(0))
+        const resizeDir = path.join(workDirs.stitch, 'resize/')
+        if(!fs.existsSync(resizeDir)){
+            fs.mkdirSync(resizeDir)
+        }
+        const outputDir = path.join(workDirs.stitch, 'output/')
+        if(!fs.existsSync(outputDir)){
+            fs.mkdirSync(outputDir)
+        }
+        const firstPageOutput = path.join(outputDir, workFile(0, EXPORT_FORMAT))
         await imageMagick.convert(files[0], firstPageOutput)
         let min = {
             height: 1000000,
@@ -122,17 +129,17 @@ const stitch = (bookInfo, workDirs)=>{
             const leftPageIndex = Math.floor(ii+files.length/2)-1
             const leftPage = files[leftPageIndex]
             const rightPage = files[ii]
-            const leftPageResized = leftPage + '.resized.jpg'
-            const rightPageResized = rightPage + '.resized.jpg'
+            const leftPageResized = path.join(resizeDir, path.basename(leftPage))
+            const rightPageResized = path.join(resizeDir, path.basename(rightPage))
             util.serverLog(`Resizing images ${ii} and ${leftPageIndex}`)
             await imageMagick.resize(leftPage, min.width, min.height, leftPageResized)
             await imageMagick.resize(rightPage, min.width, min.height, rightPageResized)
-            const outputFile = path.join(workDirs.stitch, stitchedFile(ii))
+            const outputFile = path.join(outputDir, workFile(ii, EXPORT_FORMAT))
             util.serverLog(`Stitching images ${ii} and ${leftPageIndex}`)
             await imageMagick.stitch(leftPageResized, rightPageResized, outputFile)
         }
         if(files.length % 2 === 0){
-            const lastPageOutput = path.join(workDirs.stitch, stitchedFile(files.length + 5))
+            const lastPageOutput = path.join(outputDir, workFile(files.length + 5, EXPORT_FORMAT))
             await imageMagick.convert(files[files.length - 1], lastPageOutput)
         }
         resolve()
@@ -153,13 +160,25 @@ const archive = (bookInfo, workDirs)=>{
             resolve()
         })
         archive.pipe(output)
-        archive.directory(workDirs.stitch, bookInfo.bookName)
+        archive.directory(path.join(workDirs.stitch,'output/'), bookInfo.bookName)
         archive.finalize()
     })
     .then(()=>{
         return new Promise(resolve=>{
-            fs.copyFileSync(exportPath, path.join(settings.localLibraryPath, exportFile))
-            fs.copyFileSync(exportPath, path.join(settings.remoteLibraryPath, exportFile))
+            if(settings.localLibraryPath){
+                const localDir = path.join(settings.localLibraryPath, bookInfo.category+"/")
+                if(!fs.existsSync(localDir)){
+                    fs.mkdirSync(localDir)
+                }
+                fs.copyFileSync(exportPath, path.join(localDir, exportFile))
+            }
+            if(settings.remoteLibraryPath){
+                const remoteDir = path.join(settings.remoteLibraryPath, bookInfo.category+"/")
+                if(!fs.existsSync(remoteDir)){
+                    fs.mkdirSync(remoteDir)
+                }
+                fs.copyFileSync(exportPath, path.join(remoteDir, exportFile))
+            }
             resolve()
         })
     })
