@@ -19,13 +19,8 @@ module.exports = () => {
 
         let markup = `<img id="current-page" class="scanned-page" src="file://${query.image}" />`
 
-        let versionMarkup = `<p>v${settings.appVersion} built ${settings.versionDate}</p>`
-        if (settings.newVersionAvailable) {
-            versionMarkup += `<br/><div class="badge badge-best">New version available, v${settings.newVersion}</div>`
-        }
-        document.getElementById('version').innerHTML = versionMarkup
         document.getElementById('current-image').innerHTML = markup
-        document.getElementById('header').innerHTML = 'Page'
+        document.getElementById('header').innerHTML = `${query.bookName} | Page`
 
         //Without this, the loaded selection points won't display properly since the image width is still 0
         setTimeout(()=>{
@@ -152,6 +147,13 @@ module.exports = () => {
                         bookName: query.bookName
                     }
                 )
+            })
+            $('#hide-button').on('click', (jQEvent)=>{
+                book.movePages(query.sourceIndex, query.bookName, '.hidden', [query.image])
+                window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${nextPage}`
+            })
+            $('#book-button').on('click', (jQEvent)=>{
+                window.location.href = `book.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}`
             })
 
             $(document).ready(function(){

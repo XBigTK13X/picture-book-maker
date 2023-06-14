@@ -21,15 +21,25 @@ const getPages = (sourceIndex, bookName)=>{
     return pages
 }
 
-const movePages = (sourceIndex, newBookName, pagePaths) => {
+const movePages = (sourceIndex, oldBookName, newBookName, pagePaths) => {
     const source = sources.getByIndex(sourceIndex)
     const targetBookDir = path.join(source, newBookName)
     if (!fs.existsSync(targetBookDir)){
         fs.mkdirSync(targetBookDir);
     }
+    let oldInfo = getInfo(sourceIndex, oldBookName)
+    let newInfo = getInfo(sourceIndex, newBookName)
     for(let pagePath of pagePaths){
-        fs.renameSync(pagePath, path.join(targetBookDir, path.basename(pagePath)))
+        const newPagePath = path.join(targetBookDir, path.basename(pagePath))
+        newInfo.pages[newPagePath] = oldInfo.pages[pagePath]
+        newInfo.pages[newPagePath].filePath = newPagePath
+        delete oldInfo.pages[pagePath]
+        fs.renameSync(pagePath, newPagePath)
     }
+    const oldDirs = workspace.getDirs(oldBookName)
+    const newDirs = workspace.getDirs(newBookName)
+    fs.writeFileSync(path.join(oldDirs.info, 'info.json'), oldInfo.toJson())
+    fs.writeFileSync(path.join(newDirs.info, 'info.json'), newInfo.toJson())
 }
 
 const getInfo = (sourceIndex, bookName) => {

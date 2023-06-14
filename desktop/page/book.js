@@ -58,8 +58,9 @@ module.exports = () => {
         }
 
         const controlMarkup = `
-            <input id="book-move-target" type="text" class="edit-text" placeholder="Selection new book name" />
+            <input id="book-move-target" type="text" class="edit-text" placeholder="New book name" value="${query.bookName}" />
             <button id="book-move-action">Move Selection</button>
+            <button id="book-rename-action">Rename Book</button>
         `
 
         renderPages([])
@@ -75,7 +76,20 @@ module.exports = () => {
                     bookName: newBookName
                 }
                 const sourcePages = pages.slice(selectionIndices[0], selectionIndices[1] + 1)
-                book.movePages(query.sourceIndex, newBookName, sourcePages)
+                book.movePages(query.sourceIndex, query.bookName, newBookName, sourcePages)
+                window.location.href = "book.html?"+util.queryString(params)
+            }
+        })
+
+        $('#book-rename-action').on('click', (jQEvent)=>{
+            const textElement = $('#book-move-target')
+            const newBookName = textElement.val()
+            if(newBookName && newBookName !== query.bookName){
+                const params = {
+                    sourceIndex: query.sourceIndex,
+                    bookName: newBookName
+                }
+                book.movePages(query.sourceIndex, query.bookName, newBookName, pages)
                 window.location.href = "book.html?"+util.queryString(params)
             }
         })

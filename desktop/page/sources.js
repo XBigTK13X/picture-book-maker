@@ -5,14 +5,11 @@ module.exports = () => {
 
         let markup = sources.getList().map((directoryPath, index)=>{
             return `
-
                 <a href="books.html?sourceIndex=${index}">
                     <div class="wide-link">
                         ${directoryPath}
                     </div>
                 </a>
-
-
             `
         }).join('')
 

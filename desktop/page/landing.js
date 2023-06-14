@@ -1,10 +1,33 @@
 module.exports = () => {
     return new Promise((resolve, reject) => {
-        const util = require('../../common/util')
         const _ = require('lodash')
-        const Coordinates = require('../service/image-magick').Coordinates
         const settings = require('../../common/settings')
-        let markup = '<a href="page.html?sourceIndex=1&bookName=Excavator%27s%20123%20-%20Sherri%20Rinker&image=E:\\media\\book\\raw\\shopped\\CameraSnaps\\test\\Excavator%27s%20123%20-%20Sherri%20Rinker\\PXL_20230608_143649989.jpg">Debug Page</a>'
+        const sources = require('../data/sources')
+        const books = require('../data/books')
+
+        let allBooks = _.flatten(
+            sources.getList().map((directoryPath, sourceIndex)=>{
+                const bookList = books.getList(sourceIndex)
+                return bookList.map((bookName)=>{
+                    return {
+                        sourceIndex,
+                        bookName,
+                        sourceDirPath: directoryPath,
+                        sortKey: bookName.toLowerCase()
+                    }
+                })
+            })
+        )
+        allBooks.sort((a,b)=>{return a.sortKey < b.sortKey ? -1 : 1})
+        let markup = allBooks.map((book)=>{
+            return `
+                <a href="book.html?sourceIndex=${book.sourceIndex}&bookName=${book.bookName}">
+                <div class="wide-link">
+                        ${book.bookName} (${book.sourceDirPath})
+                        </div>
+                </a>
+            `
+        }).join('')
 
         let versionMarkup = `<p>v${settings.appVersion} built ${settings.versionDate}</p>`
         if (settings.newVersionAvailable) {
@@ -12,7 +35,25 @@ module.exports = () => {
         }
         document.getElementById('version').innerHTML = versionMarkup
         document.getElementById('content').innerHTML = markup
-        document.getElementById('header').innerHTML = 'Picture Book Maker'
+        document.getElementById('header').innerHTML = `Picture Book Maker (${allBooks.length} books)`
+
+        $('#filter-text').on('keyup', (jQEvent)=>{
+            const element = $(jQEvent.target)
+
+            if(element.val().length > 2){
+                const needle = element.val().toLowerCase()
+                let markup = allBooks.filter(book=>{return book.sortKey.indexOf(needle) !== -1}).map((book)=>{
+                    return `
+                        <a href="book.html?sourceIndex=${book.sourceIndex}&bookName=${book.bookName}">
+                        <div class="wide-link">
+                                ${book.bookName} (${book.sourceDirPath})
+                                </div>
+                        </a>
+                    `
+                }).join('')
+                document.getElementById('content').innerHTML = markup
+            }
+        })
 
         resolve()
     })
