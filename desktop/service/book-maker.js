@@ -1,8 +1,11 @@
 const path = require('path')
 const fs = require('fs')
 const sizeOf = require('image-size')
-const imageMagick = require('./image-magick')
+const archiver = require('archiver')
 const util = require('../../common/util')
+const settings = require('../../common/settings')
+const imageMagick = require('./image-magick')
+
 
 const ROTATION_LOOKUP = {
     'up': 90,
@@ -137,7 +140,29 @@ const stitch = (bookInfo, workDirs)=>{
 }
 
 const archive = (bookInfo, workDirs)=>{
-    return Promise.resolve()
+    const exportFile = bookInfo.bookName + ".cbz"
+    const exportPath = path.join(workDirs.export, exportFile)
+    return new Promise((resolve)=>{
+        const output = fs.createWriteStream(exportPath)
+        const archive = archiver('zip', {
+            zlib: {
+                level: 0 //The images are already compressed, I just want them in a CBZ format
+            }
+        })
+        output.on('close', ()=>{
+            resolve()
+        })
+        archive.pipe(output)
+        archive.directory(workDirs.stitch, bookInfo.bookName)
+        archive.finalize()
+    })
+    .then(()=>{
+        return new Promise(resolve=>{
+            fs.copyFileSync(exportPath, path.join(settings.localLibraryPath, exportFile))
+            fs.copyFileSync(exportPath, path.join(settings.remoteLibraryPath, exportFile))
+            resolve()
+        })
+    })
 }
 
 module.exports = {
