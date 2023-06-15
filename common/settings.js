@@ -28,7 +28,13 @@ let config = {
         stdio: 'ignore'
     },
     localLibraryPath: null,
-    remoteLibraryPath: null
+    remoteLibraryPath: null,
+    colorCorrection:{
+        brightnessPercent:{
+            cover: 100,
+            page: 115
+        }
+    }
 }
 
 let overridePath = 'E:/data/pbm.js'

@@ -17,7 +17,7 @@ class IpcServer {
         this.ipcMain.on('pbm-process-book', async (event, options) =>{
             util.serverLog(`Processing [${options.bookName}]`)
             const bookInfo = book.getInfo(options.sourceIndex, options.bookName)
-            workspace.clean(options.bookName)
+            //workspace.clean(options.bookName)
             const workDirs = workspace.getDirs(options.bookName)
             util.serverLog(`Extracting [${options.bookName}]`)
             return bookMaker.extract(bookInfo, workDirs)
@@ -32,6 +32,11 @@ class IpcServer {
             .then(()=>{
                 util.serverLog(`Finished [${options.bookName}]`)
             })
+        })
+
+        this.ipcMain.on('pbm-browse-location', async (event, options)=>{
+            util.serverLog(`Opening [${options.path}] in explorer`)
+            require('electron').shell.openPath(options.path);
         })
 
         process.on('exit', function () {

@@ -2,11 +2,15 @@ let selectionIndices = []
 
 module.exports = () => {
     return new Promise((resolve, reject) => {
+        const path = require('path')
         const util = require('../../common/util')
         const query = util.queryParams()
         const book = require('../data/book')
+        const sources = require('../data/sources')
         const settings = require('../../common/settings')
         const workspace = require('../service/workspace')
+
+        const source = sources.getByIndex(query.sourceIndex)
 
         const RIGHT_CLICK = 2
 
@@ -64,6 +68,7 @@ module.exports = () => {
             <br/>
             <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
             <button id="book-set-category-action">Set Category</button>
+            <button id="browse-action">Browse</button>
             <button id="process-action">Process Book</button>
         `
 
@@ -113,6 +118,23 @@ module.exports = () => {
                     sourceIndex: query.sourceIndex,
                     bookName: query.bookName
                 }
+            )
+        })
+
+        $('#browse-action').on('click', (jQEvent)=>{
+            require('electron').ipcRenderer.send(
+                'pbm-browse-location',
+                {
+                    path: path.join(source, query.bookName)
+                },
+
+            )
+            require('electron').ipcRenderer.send(
+                'pbm-browse-location',
+                {
+                    path: path.join(workspace.getDirs(query.bookName).root)
+                },
+
             )
         })
 

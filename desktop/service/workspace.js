@@ -29,7 +29,13 @@ const prepDir = (bookName) => {
     const extract = path.join(bookWorkDir, extractDir + '/')
     if(!fs.existsSync(extract)){
         fs.mkdirSync(extract);
+    }
+    const stitch = path.join(bookWorkDir, stitchDir + '/')
+    if(!fs.existsSync(stitch)){
         fs.mkdirSync(path.join(bookWorkDir, stitchDir + '/'))
+    }
+    const output = path.join(bookWorkDir, exportDir + '/')
+    if(!fs.existsSync(output)){
         fs.mkdirSync(path.join(bookWorkDir, exportDir + '/'))
     }
 }
@@ -44,6 +50,7 @@ const getDirs = (bookName) => {
         prepDir(bookName)
     }
     return {
+        root: path.join(settings.dataDir,'work/', bookName+'/'),
         info: infoPath,
         extract: extractPath,
         stitch: path.join(settings.dataDir,'work/', bookName+'/', stitchDir+'/'),

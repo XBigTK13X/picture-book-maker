@@ -10,8 +10,6 @@ const BRACKET_RIGHT = 221
 module.exports = () => {
     return new Promise((resolve, reject) => {
         const util = require('../../common/util')
-        const _ = require('lodash')
-        const settings = require('../../common/settings')
         const query = util.queryParams()
         query.sourceIndex = parseInt(query.sourceIndex, 10)
         const book = require('../data/book')
@@ -24,6 +22,7 @@ module.exports = () => {
 
         //Without this, the loaded selection points won't display properly since the image width is still 0
         setTimeout(()=>{
+            let dragSelection = false
             const pages = book.getPages(query.sourceIndex, query.bookName)
             let previousPage = null
             let nextPage = null
@@ -107,6 +106,19 @@ module.exports = () => {
                     book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
                 }
                 if(jQEvent.button === RIGHT_CLICK){
+                    dragSelection = true
+                }
+            }
+
+            const unclickImage = (jQEvent)=>{
+                if(jQEvent.button === RIGHT_CLICK){
+                    dragSelection = false
+                    book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
+                }
+            }
+
+            const dragImage = (jQEvent)=>{
+                if(dragSelection){
                     let centerX = 0
                     let centerY = 0
                     for(let coord of currentSelection){
@@ -137,12 +149,13 @@ module.exports = () => {
                     `
                     }
                     currentSelection = newSelection
-                    book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
                     document.getElementById('selection-points').innerHTML = selectionMarkup
                 }
             }
 
             $('#current-page').on('mousedown', clickImage)
+            $('#current-page').on('mouseup', unclickImage)
+            $('#current-page').on('mousemove', dragImage)
             $('#process-button').on('click', (jQEvent)=>{
                 require('electron').ipcRenderer.send(
                     'pbm-process-book',

@@ -221,10 +221,30 @@ const resize = (inputPath, width, height, outputPath)=>{
     })
 }
 
+const normalize = (inputPath, brightnessPercent, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            inputPath,
+            '-quality',
+            '100%',
+            '-define',
+            'modulate:colorspace=HSB',
+            '-modulate',
+            brightnessPercent,
+            outputPath
+        ]
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
 module.exports = {
     convert,
     crop,
     distort,
+    normalize,
     resize,
     rotate,
     stitch
