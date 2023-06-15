@@ -77,17 +77,17 @@ const extract = (bookInfo, workDirs)=>{
         if(!fs.existsSync(rotateDir)){
             fs.mkdirSync(rotateDir)
         }
-        for(let pageKey of pageKeys){
-            const page = bookInfo.pages[pageKey]
+        for(let ii = 0; ii < pageKeys.length; ii++){
+            const page = bookInfo.pages[pageKeys[ii]]
             let rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-            if(page.sortIndex > reverseIndex){
+            if(ii > reverseIndex){
                 rotation += 180
             }
             const inputPath = path.join(cropDir, workFile(page.sortIndex))
             const outputPath = path.join(rotateDir, workFile(page.sortIndex))
             promises.push(()=>{return {
-                message: `Rotate image ${rotateIndex++} of ${pageKeys.length}`,
-                promise: imageMagick.rotate(inputPath, rotation, outputPath)
+                promise: imageMagick.rotate(inputPath, rotation, outputPath),
+                message: `Rotate image ${rotateIndex++} of ${pageKeys.length}`
             }})
         }
         await batch(promises, BATCH_SIZE)
@@ -125,7 +125,8 @@ const stitch = (bookInfo, workDirs)=>{
 
         util.serverLog(`Found a minimum image size of ${min.width} x ${min.height}`)
 
-        for(let ii = 1; ii < Math.floor(files.length / 2) - 1; ii++){
+        const stitchMiddleIndex = Math.floor(files.length / 2) - (files.length % 2 === 0 ? 1 : 0)
+        for(let ii = 1; ii < stitchMiddleIndex; ii++){
             const leftPageIndex = Math.floor(ii+files.length/2)-1
             const leftPage = files[leftPageIndex]
             const rightPage = files[ii]
@@ -138,10 +139,8 @@ const stitch = (bookInfo, workDirs)=>{
             util.serverLog(`Stitching images ${ii} and ${leftPageIndex}`)
             await imageMagick.stitch(leftPageResized, rightPageResized, outputFile)
         }
-        if(files.length % 2 === 0){
-            const lastPageOutput = path.join(outputDir, workFile(files.length + 5, EXPORT_FORMAT))
-            await imageMagick.convert(files[files.length - 1], lastPageOutput)
-        }
+        const lastPageOutput = path.join(outputDir, workFile(files.length + 5, EXPORT_FORMAT))
+        await imageMagick.convert(files[files.length - 1], lastPageOutput)
         resolve()
     })
 }

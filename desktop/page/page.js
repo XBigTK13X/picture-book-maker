@@ -51,7 +51,8 @@ module.exports = () => {
                 for(let coord of currentSelection){
                     let translatedCoords = coordinates.elementToWindow(coord.x, coord.y, imageElement)
                     selectionMarkup += `
-                    <div style="position: absolute;
+                    <div style="pointer-events: none;
+                                position: absolute;
                                 left: ${translatedCoords.window.x - TARGET_WIDTH}px;
                                 top: ${translatedCoords.window.y - TARGET_WIDTH}px;
                                 opacity: 0.75;">
@@ -73,7 +74,8 @@ module.exports = () => {
                         const points = coordinates.windowToElement(jQEvent)
                         currentSelection.push({x: points.element.x, y: points.element.y})
                         selectionMarkup += `
-                            <div style="position: absolute;
+                            <div style="pointer-events: none;
+                                        position: absolute;
                                         left: ${points.window.x - TARGET_WIDTH}px;
                                         top: ${points.window.y - TARGET_WIDTH}px;
                                         opacity: 0.75;">
@@ -91,7 +93,8 @@ module.exports = () => {
                         for(let coord of currentSelection){
                             let translatedCoords = coordinates.elementToWindow(coord.x, coord.y, imageElement)
                             selectionMarkup += `
-                            <div style="position: absolute;
+                            <div style="pointer-events: none;
+                                        position: absolute;
                                         left: ${translatedCoords.window.x - TARGET_WIDTH}px;
                                         top: ${translatedCoords.window.y - TARGET_WIDTH}px;
                                         opacity: 0.75;">
@@ -124,7 +127,8 @@ module.exports = () => {
                             y: points.element.y
                         })
                         selectionMarkup += `
-                        <div style="position: absolute;
+                        <div style="pointer-events: none;
+                                    position: absolute;
                                     left: ${points.window.x - TARGET_WIDTH}px;
                                     top: ${points.window.y - TARGET_WIDTH}px;
                                     opacity: 0.75;">

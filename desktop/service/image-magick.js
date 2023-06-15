@@ -119,6 +119,7 @@ const distort = (inputPath, rawCoordinates, outputPath) =>{
             coordMap.join(' '),
             '-virtual-pixel',
             'Black',
+            '-strip',
             `${outputPath}`
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
@@ -138,6 +139,7 @@ const crop = (inputPath, rawCoordinates, outputPath) => {
             `${inputPath}`,
             '-crop',
             `${coordinates.interiorFit.width()}x${coordinates.interiorFit.height()}+${coordinates.interiorFit.topLeft.x}+${coordinates.interiorFit.topLeft.y}`,
+            '-strip',
             `${outputPath}`
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
@@ -156,6 +158,7 @@ const rotate = (inputPath, rotationDegrees, outputPath)=>{
             inputPath,
             '-rotate',
             rotationDegrees,
+            '-strip',
             outputPath
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
@@ -174,6 +177,7 @@ const stitch = (firstImage, secondImage, outputPath)=>{
             '+append',
             firstImage,
             secondImage,
+            '-strip',
             outputPath
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
@@ -190,6 +194,7 @@ const convert = (inputPath, outputPath)=>{
             '-quality',
             '100%',
             inputPath,
+            '-strip',
             outputPath
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
@@ -206,6 +211,7 @@ const resize = (inputPath, width, height, outputPath)=>{
             inputPath,
             '-resize',
             `${width}x${height}\!`,
+            '-strip',
             outputPath
         ]
         const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)

@@ -40,7 +40,7 @@ const getDirs = (bookName) => {
     }
     const infoPath = path.join(settings.dataDir,'work/', bookName+'/', infoDir+'/')
     const extractPath = path.join(settings.dataDir,'work/', bookName+'/', extractDir+'/')
-    if(!fs.existsSync(infoPath) || !fs.existsSync()){
+    if(!fs.existsSync(infoPath) || !fs.existsSync(extractPath)){
         prepDir(bookName)
     }
     return {

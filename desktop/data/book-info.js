@@ -44,7 +44,7 @@ class BookInfo {
     }
 
     getReverseIndex(){
-        return Math.floor(this.pages.length / 2)-1
+        return Math.floor(Object.keys(this.pages).length / 2) - 1
     }
 }
 
