@@ -85,10 +85,20 @@ const setCategory = (sourceIndex, bookName, category) => {
     return info
 }
 
+const toggleCollate = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleCollate()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
     getInfo,
     setSelection,
-    setCategory
+    setCategory,
+    toggleCollate
 }

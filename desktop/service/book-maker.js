@@ -133,9 +133,13 @@ const stitch = (bookInfo, workDirs)=>{
         const brightness = settings.colorCorrection.brightnessPercent
         await imageMagick.convert(files[0], frontCover)
         await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
+        let backCoverIndex = files.length - 1
+        if(bookInfo.collateBackwards){
+            backCoverIndex = bookInfo.getReverseIndex() + 1
+        }
         const backCover = path.join(mergeDir, workFile(files.length + 5, EXPORT_FORMAT))
         const backCoverOutput = path.join(colorDir, workFile(files.length + 5, EXPORT_FORMAT))
-        await imageMagick.convert(files[files.length - 1], backCover)
+        await imageMagick.convert(files[backCoverIndex], backCover)
         await imageMagick.normalize(backCover, brightness.cover, backCoverOutput)
 
         let min = {
@@ -157,9 +161,12 @@ const stitch = (bookInfo, workDirs)=>{
         let resizePromises = []
         let stitchPromises = []
         let colorPromises = []
-        const stitchMiddleIndex = Math.floor(files.length / 2) - (files.length % 2 === 0 ? 1 : 0)
+        const stitchMiddleIndex = Math.floor(files.length / 2)
         for(let ii = 1; ii < stitchMiddleIndex; ii++){
-            const leftPageIndex = Math.floor(ii+files.length/2)-1
+            let leftPageIndex = Math.floor(ii+files.length/2)-1
+            if(bookInfo.collateBackwards){
+                leftPageIndex = (files.length - ii)
+            }
             const leftPage = files[leftPageIndex]
             const rightPage = files[ii]
             const leftPageResized = path.join(resizeDir, path.basename(leftPage))

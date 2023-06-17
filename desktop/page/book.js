@@ -65,6 +65,7 @@ module.exports = () => {
             <input id="book-move-target" type="text" class="edit-text" placeholder="New book name" value="${query.bookName}" />
             <button id="book-move-action">Move Selection</button>
             <button id="book-rename-action">Rename Book</button>
+            <button id="toggle-collate-action">Toggle Collage</button>
             <br/>
             <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
             <button id="book-set-category-action">Set Category</button>
@@ -138,6 +139,9 @@ module.exports = () => {
             )
         })
 
+        $('#toggle-collate-action').on('click', (jQEvent)=>{
+            book.toggleCollate(query.sourceIndex, query.bookName)
+        })
         resolve()
     })
 }

@@ -6,6 +6,7 @@ const TARGET_WIDTH = 22
 
 const BRACKET_LEFT = 219
 const BRACKET_RIGHT = 221
+const ENTER_KEY = 13
 
 module.exports = () => {
     return new Promise((resolve, reject) => {
@@ -18,7 +19,6 @@ module.exports = () => {
         let markup = `<img id="current-page" class="scanned-page" src="file://${query.image}" />`
 
         document.getElementById('current-image').innerHTML = markup
-        document.getElementById('header').innerHTML = `${query.bookName} | Page`
 
         //Without this, the loaded selection points won't display properly since the image width is still 0
         setTimeout(()=>{
@@ -26,6 +26,7 @@ module.exports = () => {
             const pages = book.getPages(query.sourceIndex, query.bookName)
             let previousPage = null
             let nextPage = null
+            let currentPage = null
             for(let ii = 0; ii < pages.length; ii++){
                 const page = pages[ii]
                 if(page === query.image){
@@ -40,8 +41,11 @@ module.exports = () => {
                     else {
                         nextPage = pages[ii + 1]
                     }
+                    currentPage = ii
+                    break;
                 }
             }
+            document.getElementById('header').innerHTML = `${query.bookName} | Page ${currentPage} of ${pages.length}`
             bookInfo = book.getInfo(query.sourceIndex, query.bookName)
             let selectionMarkup = ''
             let currentSelection = bookInfo.getSelection(query.image) || []
@@ -156,6 +160,35 @@ module.exports = () => {
             $('#current-page').on('mousedown', clickImage)
             $('#current-page').on('mouseup', unclickImage)
             $('#current-page').on('mousemove', dragImage)
+            $(document).on('keydown', (jQEvent)=>{
+                console.log({code: jQEvent})
+                if(jQEvent.which === ENTER_KEY){
+                    currentSelection = bookInfo.getSelection(previousPage) || []
+                    selectionMarkup = ''
+                    if(currentSelection.length > 0){
+                        for(let coord of currentSelection){
+                            let translatedCoords = coordinates.elementToWindow(coord.x, coord.y, imageElement)
+                            selectionMarkup += `
+                            <div style="pointer-events: none;
+                                        position: absolute;
+                                        left: ${translatedCoords.window.x - TARGET_WIDTH}px;
+                                        top: ${translatedCoords.window.y - TARGET_WIDTH}px;
+                                        opacity: 0.75;">
+                                <img src="../asset/img/target.png"/>
+                            </div>
+                        `
+                        }
+                        document.getElementById('selection-points').innerHTML = selectionMarkup
+                    }
+                    book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
+                }
+                if(jQEvent.which === BRACKET_LEFT){
+                    window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${previousPage}`
+                }
+                if(jQEvent.which === BRACKET_RIGHT){
+                    window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${nextPage}`
+                }
+            })
             $('#process-button').on('click', (jQEvent)=>{
                 require('electron').ipcRenderer.send(
                     'pbm-process-book',
@@ -172,18 +205,6 @@ module.exports = () => {
             $('#book-button').on('click', (jQEvent)=>{
                 window.location.href = `book.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}`
             })
-
-            $(document).ready(function(){
-                $(this).on('keydown',(jQEvent)=>{
-                    if(jQEvent.which === BRACKET_LEFT){
-                        window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${previousPage}`
-                    }
-                    if(jQEvent.which === BRACKET_RIGHT){
-                        window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${nextPage}`
-                    }
-                })
-            })
-
             resolve()
         },100)
     })

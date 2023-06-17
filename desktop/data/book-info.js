@@ -5,6 +5,7 @@ class BookInfo {
         this.pages = {}
         this.firstPageOrientation = 'up'
         this.category = 'Unsorted'
+        this.collateBackwards = false
     }
 
     fromDict(dict){
@@ -12,6 +13,7 @@ class BookInfo {
         this.pages = dict.pages
         this.firstPageOrientation = dict.firstPageOrientation
         this.category = dict.category
+        this.collateBackwards = dict.collateBackwards
     }
 
     toJson(){
@@ -19,7 +21,8 @@ class BookInfo {
             bookName: this.bookName,
             pages: this.pages,
             firstPageOrientation: this.firstPageOrientation,
-            category: this.category
+            category: this.category,
+            collateBackwards: this.collateBackwards
         }, null, 4)
     }
 
@@ -45,6 +48,10 @@ class BookInfo {
 
     getReverseIndex(){
         return Math.floor(Object.keys(this.pages).length / 2) - 1
+    }
+
+    toggleCollate(){
+        this.collateBackwards = !this.collateBackwards
     }
 }
 
