@@ -6,6 +6,7 @@ class BookInfo {
         this.firstPageOrientation = 'up'
         this.category = 'Unsorted'
         this.collateBackwards = false
+        this.centerOffset = 0
     }
 
     fromDict(dict){
@@ -14,6 +15,7 @@ class BookInfo {
         this.firstPageOrientation = dict.firstPageOrientation
         this.category = dict.category
         this.collateBackwards = dict.collateBackwards
+        this.centerOffset = dict.centerOffset
     }
 
     toJson(){
@@ -22,7 +24,8 @@ class BookInfo {
             pages: this.pages,
             firstPageOrientation: this.firstPageOrientation,
             category: this.category,
-            collateBackwards: this.collateBackwards
+            collateBackwards: this.collateBackwards,
+            centerOffset: this.centerOffset
         }, null, 4)
     }
 

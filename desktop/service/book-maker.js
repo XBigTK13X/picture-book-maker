@@ -91,7 +91,7 @@ const extract = (bookInfo, workDirs)=>{
         for(let ii = 0; ii < pageKeys.length; ii++){
             const page = bookInfo.pages[pageKeys[ii]]
             let rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-            if(ii > reverseIndex){
+            if(ii > reverseIndex + ((!!bookInfo.centerOffset)?bookInfo.centerOffset:0)){
                 rotation += 180
             }
             const inputPath = path.join(cropDir, workFile(page.sortIndex))
@@ -161,9 +161,9 @@ const stitch = (bookInfo, workDirs)=>{
         let resizePromises = []
         let stitchPromises = []
         let colorPromises = []
-        const stitchMiddleIndex = Math.floor(files.length / 2)
+        const stitchMiddleIndex = Math.floor(files.length / 2) + ((!!bookInfo.centerOffset) ? bookInfo.centerOffset : 0)
         for(let ii = 1; ii < stitchMiddleIndex; ii++){
-            let leftPageIndex = Math.floor(ii+files.length/2)-1
+            let leftPageIndex = ii + stitchMiddleIndex - 1
             if(bookInfo.collateBackwards){
                 leftPageIndex = (files.length - ii)
             }
