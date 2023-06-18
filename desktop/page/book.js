@@ -20,16 +20,24 @@ module.exports = () => {
 
         const pages = book.getPages(query.sourceIndex, query.bookName)
 
+        const reverseIndex = bookInfo.getReverseIndex()
+
         const renderPages = (selections)=>{
+            let showMiddle = false
             if(!!selections){
                 selections.sort((a,b)=>{return a - b})
             }
             const markup = pages.slice(0,settings.maxBookPages).map((page,pageIndex)=>{
+                let middle = ''
+                if (!showMiddle && pageIndex > reverseIndex){
+                    showMiddle = true
+                    middle = `<img src="../asset/img/middle.png" class="divider">`
+                }
                 let bounded=null
                 if(selections.length === 2){
                     bounded = selections[0]<=pageIndex && selections[1]>=pageIndex
                 }
-                return `
+                return middle + `
                     <a
                         href="page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${page}"
                         class="page-list-item-wrapper${bounded?' bounded-item':''}"
@@ -65,7 +73,7 @@ module.exports = () => {
             <input id="book-move-target" type="text" class="edit-text" placeholder="New book name" value="${query.bookName}" />
             <button id="book-move-action">Move Selection</button>
             <button id="book-rename-action">Rename Book</button>
-            <button id="toggle-collate-action">Toggle Collage</button>
+            <button id="toggle-collate-action">Toggle Collate</button>
             <br/>
             <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
             <button id="book-set-category-action">Set Category</button>
