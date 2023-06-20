@@ -22,32 +22,63 @@ module.exports = () => {
 
         const reverseIndex = bookInfo.getReverseIndex()
 
-        const renderPages = (selections)=>{
+        const renderPages = (selections, twoColMode)=>{
             let showMiddle = false
             if(!!selections){
                 selections.sort((a,b)=>{return a - b})
             }
-            const markup = pages.slice(0,settings.maxBookPages).map((page,pageIndex)=>{
+            const somePages = pages.slice(0,settings.maxBookPages)
+            let bounded=null
+            const markup = somePages.map((page,pageIndex)=>{
                 let middle = ''
-                if (!showMiddle && pageIndex > reverseIndex){
-                    showMiddle = true
-                    middle = `<img src="../asset/img/middle.png" class="divider">`
+                    if (!showMiddle && pageIndex >= reverseIndex){
+                        showMiddle = true
+                        middle = `<img src="../asset/img/middle.png" class="divider">`
+                        document.getElementById('header').innerHTML = `Book - ${query.bookName} - ${pages.length} pages - (${pageIndex}|${pages.length-pageIndex})`
+                    }
+                if(!twoColMode){
+                    if(selections.length === 2){
+                        bounded = selections[0]<=pageIndex && selections[1]>=pageIndex
+                    }
+                    return middle + `
+                        <a
+                            href="page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${page}"
+                            class="page-list-item-wrapper${bounded?' bounded-item':''}"
+                            data-page-index="${pageIndex}"
+                        >
+                            <img data-page-index="${pageIndex}" class="page-list-item scanned-page" src="file://${page}" />
+                        <a/>
+                    `
                 }
-                let bounded=null
-                if(selections.length === 2){
-                    bounded = selections[0]<=pageIndex && selections[1]>=pageIndex
+                else {
+                    let leftIndex = pageIndex + reverseIndex - 1
+                    if(bookInfo.collateBackwards){
+                        leftIndex = pages.length - pageIndex
+                    }
+                    if(pageIndex <= 0 || pageIndex >= somePages.length){
+                        return ''
+                    }
+                    if(pageIndex < reverseIndex){
+                        return `
+                        <a
+                            href="page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${somePages[leftIndex]}"
+                            class="page-list-item-wrapper${bounded?' bounded-item':''}"
+                            data-page-index="${leftIndex}"
+                        >
+                            <img data-page-index="${leftIndex}" class="page-list-item-big scanned-page" src="file://${somePages[leftIndex]}" />
+                        <a/>
+                        <a
+                            href="page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${page}"
+                            class="page-list-item-wrapper${bounded?' bounded-item':''}"
+                            data-page-index="${pageIndex}"
+                        >
+                            <img data-page-index="${pageIndex}" class="page-list-item-big scanned-page" src="file://${page}" />
+                        <a/>
+                        <br/>
+                        `
+                    }
                 }
-                return middle + `
-                    <a
-                        href="page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${page}"
-                        class="page-list-item-wrapper${bounded?' bounded-item':''}"
-                        data-page-index="${pageIndex}"
-                    >
-                        <img data-page-index="${pageIndex}" class="page-list-item scanned-page" src="file://${page}" />
-                    <a/>
-                `
             }).join('')
-
             document.getElementById('pages-list').innerHTML = markup
 
             $('.page-list-item-wrapper').on('mousedown', (jQEvent)=>{
@@ -74,16 +105,17 @@ module.exports = () => {
             <button id="book-move-action">Move Selection</button>
             <button id="book-rename-action">Rename Book</button>
             <button id="toggle-collate-action">Toggle Collate</button>
+            <button id="overview-action">Overview</button>
             <br/>
             <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
             <button id="book-set-category-action">Set Category</button>
             <button id="browse-action">Browse</button>
             <button id="process-action">Process Book</button>
+            <button id="two-col-action">Two Columns</button>
         `
 
         renderPages([])
         document.getElementById('book-controls').innerHTML = controlMarkup
-        document.getElementById('header').innerHTML = `Book - ${query.bookName} - ${pages.length} pages`
 
         $('#book-move-action').on('click', (jQEvent)=>{
             const textElement = $('#book-move-target')
@@ -149,6 +181,14 @@ module.exports = () => {
 
         $('#toggle-collate-action').on('click', (jQEvent)=>{
             book.toggleCollate(query.sourceIndex, query.bookName)
+        })
+
+        $('#two-col-action').on('click', (jQEvent)=>{
+            renderPages(selectionIndices, 'two-col')
+        })
+
+        $('#overview-action').on('click', (jQEvent)=>{
+            renderPages(selectionIndices)
         })
         resolve()
     })

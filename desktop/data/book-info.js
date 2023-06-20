@@ -6,7 +6,8 @@ class BookInfo {
         this.firstPageOrientation = 'up'
         this.category = 'Unsorted'
         this.collateBackwards = false
-        this.centerOffset = 0
+        this.skipStitching = false
+        this.sequentialStitching = false
     }
 
     fromDict(dict){
@@ -15,7 +16,8 @@ class BookInfo {
         this.firstPageOrientation = dict.firstPageOrientation
         this.category = dict.category
         this.collateBackwards = dict.collateBackwards
-        this.centerOffset = dict.centerOffset
+        this.skipStitching = dict.skipStitching
+        this.sequentialStitching = dict.sequentialStitching
     }
 
     toJson(){
@@ -25,7 +27,8 @@ class BookInfo {
             firstPageOrientation: this.firstPageOrientation,
             category: this.category,
             collateBackwards: this.collateBackwards,
-            centerOffset: this.centerOffset
+            skipStitching: this.skipStitching,
+            sequentialStitching: this.sequentialStitching
         }, null, 4)
     }
 
@@ -42,6 +45,9 @@ class BookInfo {
     }
 
     getSelection(pagePath){
+        if(!this.pages[pagePath]){
+            return null
+        }
         return this.pages[pagePath].selection
     }
 
@@ -50,11 +56,22 @@ class BookInfo {
     }
 
     getReverseIndex(){
-        return Math.floor(Object.keys(this.pages).length / 2) - 1
+        return Math.floor(Object.keys(this.pages).length / 2)
     }
 
     toggleCollate(){
         this.collateBackwards = !this.collateBackwards
+    }
+
+    getPage(pagePath){
+        const pageKey = pagePath.replaceAll("\\\\","\\")
+        return this.pages[pageKey]
+    }
+
+    getKeys(){
+        let keys = Object.keys(this.pages)
+        keys.sort()
+        return keys
     }
 }
 

@@ -49,6 +49,27 @@ const getInfo = (sourceIndex, bookName) => {
         const dict = JSON.parse(fs.readFileSync(infoPath))
         let info = new BookInfo()
         info.fromDict(dict)
+        const pages = getPages(sourceIndex, bookName)
+        let sortIndex = 0
+        let foundNewPage = false
+        for(let page of pages){
+            if(!info.pages[page]){
+                info.pages[page] = {
+                    filePath: page,
+                    sortIndex: sortIndex,
+                    hidden: false,
+                    selection: null
+                }
+                foundNewPage = true
+            }
+            else {
+                info.pages[page].sortIndex = sortIndex
+            }
+            sortIndex += 1
+        }
+        if(foundNewPage){
+            fs.writeFileSync(infoPath, info.toJson())
+        }
         return info
     }
     const info = new BookInfo(bookName)

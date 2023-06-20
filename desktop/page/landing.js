@@ -19,11 +19,11 @@ module.exports = () => {
             })
         )
         allBooks.sort((a,b)=>{return a.sortKey < b.sortKey ? -1 : 1})
-        let markup = allBooks.map((book)=>{
+        let markup = allBooks.map((book,bookIndex)=>{
             return `
                 <a href="book.html?sourceIndex=${book.sourceIndex}&bookName=${book.bookName}">
                 <div class="wide-link">
-                        ${book.bookName} (${book.sourceDirPath})
+                (${bookIndex}) - ${book.bookName} (${book.sourceDirPath})
                         </div>
                 </a>
             `
@@ -53,11 +53,11 @@ module.exports = () => {
                 }).join('')
                 document.getElementById('content').innerHTML = markup
             } else {
-                let markup = allBooks.map((book)=>{
+                let markup = allBooks.map((book, bookIndex)=>{
                     return `
                         <a href="book.html?sourceIndex=${book.sourceIndex}&bookName=${book.bookName}">
                         <div class="wide-link">
-                                ${book.bookName} (${book.sourceDirPath})
+                                (${bookIndex}) - ${book.bookName} (${book.sourceDirPath})
                                 </div>
                         </a>
                     `

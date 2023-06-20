@@ -24,9 +24,11 @@ module.exports = () => {
         setTimeout(()=>{
             let dragSelection = false
             const pages = book.getPages(query.sourceIndex, query.bookName)
+            bookInfo = book.getInfo(query.sourceIndex, query.bookName)
             let previousPage = null
             let nextPage = null
             let currentPage = null
+            let sortIndex = bookInfo.getPage(query.image).sortIndex
             for(let ii = 0; ii < pages.length; ii++){
                 const page = pages[ii]
                 if(page === query.image){
@@ -42,10 +44,12 @@ module.exports = () => {
                         nextPage = pages[ii + 1]
                     }
                     currentPage = ii
+
                     break;
                 }
             }
-            document.getElementById('header').innerHTML = `${query.bookName} | Page ${currentPage} of ${pages.length}`
+            $('#page-path').val(query.image)
+            document.getElementById('header').innerHTML = `${query.bookName} | Page ${currentPage+1} of ${pages.length} | Index ${sortIndex}`
             bookInfo = book.getInfo(query.sourceIndex, query.bookName)
             let selectionMarkup = ''
             let currentSelection = bookInfo.getSelection(query.image) || []
@@ -161,7 +165,6 @@ module.exports = () => {
             $('#current-page').on('mouseup', unclickImage)
             $('#current-page').on('mousemove', dragImage)
             $(document).on('keydown', (jQEvent)=>{
-                console.log({code: jQEvent})
                 if(jQEvent.which === ENTER_KEY){
                     currentSelection = bookInfo.getSelection(previousPage) || []
                     selectionMarkup = ''
