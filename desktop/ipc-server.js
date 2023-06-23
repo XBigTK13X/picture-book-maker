@@ -16,6 +16,7 @@ class IpcServer {
 
         this.ipcMain.on('pbm-process-book', async (event, options) =>{
             util.serverLog(`Processing [${options.bookName}]`)
+            const start = Date.now();
             const bookInfo = book.getInfo(options.sourceIndex, options.bookName)
             //workspace.clean(options.bookName)
             const workDirs = workspace.getDirs(options.bookName)
@@ -31,6 +32,8 @@ class IpcServer {
             })
             .then(()=>{
                 util.serverLog(`Finished [${options.bookName}]`)
+                const end = Date.now();
+                util.serverLog(`Execution time: ${((end - start)/1000)} seconds`);
             })
         })
 

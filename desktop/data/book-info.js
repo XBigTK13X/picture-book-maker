@@ -8,6 +8,7 @@ class BookInfo {
         this.collateBackwards = false
         this.skipStitching = false
         this.sequentialStitching = false
+        this.singleRotation = false
     }
 
     fromDict(dict){
@@ -18,6 +19,7 @@ class BookInfo {
         this.collateBackwards = dict.collateBackwards
         this.skipStitching = dict.skipStitching
         this.sequentialStitching = dict.sequentialStitching
+        this.singleRotation = dict.singleRotation
     }
 
     toJson(){
@@ -28,7 +30,8 @@ class BookInfo {
             category: this.category,
             collateBackwards: this.collateBackwards,
             skipStitching: this.skipStitching,
-            sequentialStitching: this.sequentialStitching
+            sequentialStitching: this.sequentialStitching,
+            singleRotation: this.singleRotation
         }, null, 4)
     }
 
@@ -61,6 +64,22 @@ class BookInfo {
 
     toggleCollate(){
         this.collateBackwards = !this.collateBackwards
+    }
+
+    toggleSkipStitching(){
+        this.skipStitching = !this.skipStitching
+    }
+
+    toggleSequentialStitching(){
+        this.sequentialStitching = !this.sequentialStitching
+    }
+
+    toggleSingleRotation(){
+        this.singleRotation = !this.singleRotation
+    }
+
+    setFirstPageOrientation(orientation){
+        this.firstPageOrientation = orientation
     }
 
     getPage(pagePath){

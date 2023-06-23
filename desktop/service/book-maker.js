@@ -95,6 +95,15 @@ const extract = (bookInfo, workDirs)=>{
                 if(ii >= reverseIndex){
                     rotation += 180
                 }
+                if(bookInfo.sequentialStitching){
+                    rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
+                    if(ii % 2 === 1){
+                        rotation += 180
+                    }
+                }
+                if(bookInfo.singleRotation){
+                    rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
+                }
                 const inputPath = path.join(cropDir, workFile(page.sortIndex))
                 const outputPath = path.join(rotateDir, workFile(page.sortIndex))
                 if(fs.existsSync(outputPath)){
@@ -113,7 +122,6 @@ const extract = (bookInfo, workDirs)=>{
 
 const stitch = (bookInfo, workDirs)=>{
     return new Promise(async (resolve)=>{
-        const start = Date.now();
         let sourceFiles = path.join(workDirs.extract,'30-rotate/')
         if(bookInfo.skipStitching){
             sourceFiles = path.join(workDirs.extract,'20-crop/')
@@ -143,7 +151,7 @@ const stitch = (bookInfo, workDirs)=>{
         await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
         let backCoverIndex = files.length - 1
         if(bookInfo.collateBackwards){
-            backCoverIndex = bookInfo.getReverseIndex() + 1
+            backCoverIndex = bookInfo.getReverseIndex()
         }
         const backCover = path.join(mergeDir, workFile(files.length + 5, EXPORT_FORMAT))
         const backCoverOutput = path.join(colorDir, workFile(files.length + 5, EXPORT_FORMAT))
@@ -236,8 +244,6 @@ const stitch = (bookInfo, workDirs)=>{
         await batch(resizePromises)
         await batch(stitchPromises)
         await batch(colorPromises)
-        const end = Date.now();
-        util.serverLog(`Execution time: ${((end - start)/1000)} seconds`);
         resolve()
     })
 }

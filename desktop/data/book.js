@@ -52,9 +52,10 @@ const getInfo = (sourceIndex, bookName) => {
         const pages = getPages(sourceIndex, bookName)
         let sortIndex = 0
         let foundNewPage = false
+        let newPages = {}
         for(let page of pages){
             if(!info.pages[page]){
-                info.pages[page] = {
+                newPages[page] = {
                     filePath: page,
                     sortIndex: sortIndex,
                     hidden: false,
@@ -64,12 +65,12 @@ const getInfo = (sourceIndex, bookName) => {
             }
             else {
                 info.pages[page].sortIndex = sortIndex
+                newPages[page] = info.pages[page]
             }
             sortIndex += 1
         }
-        if(foundNewPage){
-            fs.writeFileSync(infoPath, info.toJson())
-        }
+        info.pages = newPages;
+        fs.writeFileSync(infoPath, info.toJson())
         return info
     }
     const info = new BookInfo(bookName)
@@ -115,11 +116,52 @@ const toggleCollate = (sourceIndex, bookName) => {
     return info
 }
 
+const toggleSkipStitching = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSkipStitching()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
+const toggleSingleRotation = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSingleRotation()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
+const toggleSequentialStitching = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSequentialStitching()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
+const setFirstPageOrientation = (sourceIndex, bookName, orientation) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.setFirstPageOrientation(orientation)
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
     getInfo,
     setSelection,
     setCategory,
-    toggleCollate
+    setFirstPageOrientation,
+    toggleCollate,
+    toggleSequentialStitching,
+    toggleSingleRotation,
+    toggleSkipStitching
+
 }

@@ -23,6 +23,7 @@ module.exports = () => {
         const reverseIndex = bookInfo.getReverseIndex()
 
         const renderPages = (selections, twoColMode)=>{
+            $('#select-orientation').val(bookInfo.firstPageOrientation).prop('selected', true)
             let showMiddle = false
             if(!!selections){
                 selections.sort((a,b)=>{return a - b})
@@ -104,18 +105,34 @@ module.exports = () => {
             <input id="book-move-target" type="text" class="edit-text" placeholder="New book name" value="${query.bookName}" />
             <button id="book-move-action">Move Selection</button>
             <button id="book-rename-action">Rename Book</button>
-            <button id="toggle-collate-action">Toggle Collate</button>
             <button id="overview-action">Overview</button>
             <br/>
             <input id="book-category" type="text" class="edit-text" placeholder="Book category" value="${bookInfo.category?bookInfo.category:'Unsorted'}" />
             <button id="book-set-category-action">Set Category</button>
             <button id="browse-action">Browse</button>
-            <button id="process-action">Process Book</button>
             <button id="two-col-action">Two Columns</button>
+            <button id="process-action">Process Book</button>
+            <br/>
+           [<input id="check-collate-backwards" name="check-collate-backwards" type="checkbox"${bookInfo.collateBackwards ? ' checked' : '' }/>
+            <label for="check-collate-backwards">Collate Backwards</label>]
+            [<input id="check-sequential-stitching" name="check-sequential-stitching" type="checkbox"${bookInfo.sequentialStitching ? ' checked' : ''}/>
+            <label for="check-sequential-stitching">Sequential Stitching</label>]
+            [<input id="check-skip-stitching" name="check-skip-stitching" type="checkbox"${bookInfo.skipStitching ? ' checked' : ''}/>
+            <label for="check-skip-stitching">Skip Stitching</label>]
+            [<input id="check-single-rotation" name="check-single-rotation" type="checkbox"${bookInfo.singleRotation ? ' checked' : ''}/>
+            <label for="check-single-rotation">Single Rotation</label>]
+            [Orientation
+            <select id="select-orientation">
+                <option value="up">up</option>
+                <option value="right">right</option>
+                <option value="down">down</option>
+                <option value="left">left</option>
+            </select>
+            ]
         `
 
-        renderPages([])
         document.getElementById('book-controls').innerHTML = controlMarkup
+        renderPages([])
 
         $('#book-move-action').on('click', (jQEvent)=>{
             const textElement = $('#book-move-target')
@@ -179,16 +196,36 @@ module.exports = () => {
             )
         })
 
-        $('#toggle-collate-action').on('click', (jQEvent)=>{
-            book.toggleCollate(query.sourceIndex, query.bookName)
-        })
-
         $('#two-col-action').on('click', (jQEvent)=>{
             renderPages(selectionIndices, 'two-col')
         })
 
         $('#overview-action').on('click', (jQEvent)=>{
             renderPages(selectionIndices)
+        })
+
+        $('#check-collate-backwards').on('change', (jQEvent)=>{
+            book.toggleCollate(query.sourceIndex, query.bookName)
+            bookInfo.collateBackwards = !bookInfo.collateBackwards
+        })
+
+        $('#check-single-rotation').on('change', (jQEvent)=>{
+            book.toggleSingleRotation(query.sourceIndex, query.bookName)
+            bookInfo.singleRotation = !bookInfo.singleRotation
+        })
+        $('#check-skip-stitching').on('change', (jQEvent)=>{
+            book.toggleSkipStitching(query.sourceIndex, query.bookName)
+            bookInfo.skipStitching = !bookInfo.skipStitching
+        })
+        $('#check-sequential-stitching').on('change', (jQEvent)=>{
+            book.toggleSequentialStitching(query.sourceIndex, query.bookName)
+            bookInfo.sequentialStitching = !bookInfo.sequentialStitching
+        })
+        $('#select-orientation').on('change', (jQEvent)=>{
+            const element = $(jQEvent.target)
+            const orientation = element.val()
+            book.setFirstPageOrientation(query.sourceIndex, query.bookName, orientation)
+            bookInfo.firstPageOrientation = orientation
         })
         resolve()
     })

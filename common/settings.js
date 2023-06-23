@@ -8,8 +8,8 @@ const desktopPath = (relativePath) => {
 }
 
 let config = {
-    appVersion: '1.1.1',
-    versionDate: 'June 19, 2023',
+    appVersion: '1.1.2',
+    versionDate: 'June 23, 2023',
     fullScreen: false,
     debugApiCalls: false,
     interval: {
@@ -31,8 +31,8 @@ let config = {
     remoteLibraryPath: null,
     colorCorrection:{
         brightnessPercent:{
-            cover: 100,
-            page: 115
+            cover: 105,
+            page: 120
         }
     }
 }
