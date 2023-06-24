@@ -42,6 +42,10 @@ class IpcServer {
             require('electron').shell.openPath(options.path);
         })
 
+        this.ipcMain.on('pbm-alert-no-category', async (event, options)=>{
+            require('electron').dialog.showErrorBox('Unable to process book.', 'A category must be set.')
+        })
+
         process.on('exit', function () {
         })
     }

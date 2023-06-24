@@ -10,7 +10,7 @@ module.exports = () => {
             return `
                 <a href="book.html?sourceIndex=${query.sourceIndex}&bookName=${bookName}">
                 <div class="wide-link">
-                        ${bookName}
+                        ${bookName.length > 3 ? bookName: `${bookName} <--- click help`}
                         </div>
                 </a>
             `

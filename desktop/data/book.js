@@ -7,7 +7,11 @@ const BookInfo = require('./book-info')
 
 const getPages = (sourceIndex, bookName)=>{
     const sourcePath = sources.getByIndex(sourceIndex)
-    let pagePaths = util.getFiles(path.join(sourcePath,bookName))
+    let rootPath = path.join(sourcePath,bookName)
+    if(path.basename(sourcePath) === bookName){
+        rootPath = sourcePath
+    }
+    let pagePaths = util.getFiles(rootPath)
     let pages = []
     for(let page of pagePaths){
         if( page.indexOf('.jpeg') !== -1 ||

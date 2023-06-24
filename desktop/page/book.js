@@ -166,17 +166,26 @@ module.exports = () => {
             const category = textElement.val()
             if(category && category !== bookInfo.category){
                 book.setCategory(query.sourceIndex, query.bookName, category)
+                bookInfo.category = category
             }
         })
 
         $('#process-action').on('click', (jQEvent)=>{
-            require('electron').ipcRenderer.send(
-                'pbm-process-book',
-                {
-                    sourceIndex: query.sourceIndex,
-                    bookName: query.bookName
-                }
-            )
+            const textElement = $('#book-category')
+            const category = textElement.val()
+            if(!category || category === 'Unsorted' || !bookInfo.category || bookInfo.category === 'Unsorted'){
+                require('electron').ipcRenderer.send(
+                    'pbm-alert-no-category'
+                )
+            } else {
+                require('electron').ipcRenderer.send(
+                    'pbm-process-book',
+                    {
+                        sourceIndex: query.sourceIndex,
+                        bookName: query.bookName
+                    }
+                )
+            }
         })
 
         $('#browse-action').on('click', (jQEvent)=>{
