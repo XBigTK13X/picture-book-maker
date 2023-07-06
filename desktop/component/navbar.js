@@ -27,6 +27,14 @@ module.exports = {
         </a>
         `
 
+        navbarContent += `
+        <a href="admin.html">
+          <div class="navbar-button">
+            Admin
+          </div>
+        </a>
+        `
+
 
         navbarContent += '</div>'
 

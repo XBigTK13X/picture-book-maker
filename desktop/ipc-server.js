@@ -2,7 +2,12 @@ const { ipcMain } = require('electron')
 const util = require('../common/util')
 const bookMaker = require('./service/book-maker')
 const book = require('./data/book')
+const sources = require('./data/sources')
+const books = require('./data/books')
 const workspace = require('./service/workspace')
+const _ = require("lodash")
+const fs = require('fs')
+const path = require('path')
 
 class IpcServer {
     constructor() {
@@ -35,6 +40,42 @@ class IpcServer {
                 const end = Date.now();
                 util.serverLog(`Execution time: ${((end - start)/1000)} seconds`);
             })
+        })
+
+        this.ipcMain.on('pbm-regenerate-archives', async (event, options) =>{
+            util.serverLog(`Regenerating all book archives`)
+            let allBooks = _.flatten(
+                sources.getList().map((directoryPath, sourceIndex)=>{
+                    const bookList = books.getList(sourceIndex)
+                    return bookList.map((bookName)=>{
+                        return {
+                            sourceIndex,
+                            bookName,
+                            sourceDirPath: directoryPath,
+                            sortKey: bookName.toLowerCase()
+                        }
+                    })
+                })
+            )
+            allBooks.sort((a,b)=>{return a.sortKey < b.sortKey ? -1 : 1})
+            let archivePromises = allBooks.map((bookSourceInfo, mapIndex)=>{
+                const bookInfo = book.getInfo(bookSourceInfo.sourceIndex, bookSourceInfo.bookName)
+                const workDirs = workspace.getDirs(bookSourceInfo.bookName)
+                if(bookSourceInfo.bookName === '.hidden' || !fs.existsSync(path.join(workDirs.export, bookSourceInfo.bookName + ".cbz"))){
+                    return ()=>{
+                        return {
+                            promise: Promise.resolve(),
+                            message: `(${mapIndex}/${allBooks.length}) Skipping regenerate for ${bookSourceInfo.bookName}`
+                        }
+                    }
+                }
+                return ()=>{return {
+                    promise: bookMaker.archive(bookInfo, workDirs),
+                    message: `(${mapIndex}/${allBooks.length}) Regenerate archive for ${bookSourceInfo.bookName}`
+                }}
+            })
+            await util.serialBatchPromises(archivePromises, 1)
+            util.serverLog("Finished regenerating archives")
         })
 
         this.ipcMain.on('pbm-browse-location', async (event, options)=>{

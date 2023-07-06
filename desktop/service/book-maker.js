@@ -21,23 +21,6 @@ const workFile = (sortIndex, format)=>{
     return (""+((sortIndex + 5) * 10)).padStart(6, '0') + (format?format:WORK_FORMAT)
 }
 
-const BATCH_SIZE = 7
-const batch = (promiseMakers)=>{
-    return new Promise(async (resolve)=>{
-        if(promiseMakers.length === 0){
-            return resolve()
-        }
-        for(let ii = 0; ii < promiseMakers.length; ii+=BATCH_SIZE){
-            await Promise.all(promiseMakers.slice(ii, ii+BATCH_SIZE).map((p)=>{
-                let res = p()
-                util.serverLog(res.message)
-                return res.promise
-            }))
-        }
-        resolve()
-    })
-}
-
 const extract = (bookInfo, workDirs)=>{
     return new Promise(async (resolve)=>{
         const pageKeys = bookInfo.getKeys()
@@ -60,7 +43,7 @@ const extract = (bookInfo, workDirs)=>{
             }})
         }
 
-        await batch(promises)
+        await util.serialBatchPromises(promises)
         let cropIndex = 1
         promises = []
         const cropDir = path.join(workDirs.extract, '20-crop/')
@@ -79,7 +62,7 @@ const extract = (bookInfo, workDirs)=>{
                 message: `Crop image ${cropIndex++} of ${pageKeys.length}`
             }})
         }
-        await batch(promises)
+        await util.serialBatchPromises(promises)
 
         if(!bookInfo.skipStitching){
             let rotateIndex = 1
@@ -114,7 +97,7 @@ const extract = (bookInfo, workDirs)=>{
                     message: `Rotate image ${rotateIndex++} of ${pageKeys.length}`
                 }})
             }
-            await batch(promises)
+            await util.serialBatchPromises(promises)
         }
         resolve()
     })
@@ -241,9 +224,9 @@ const stitch = (bookInfo, workDirs)=>{
                 }
             }
         }
-        await batch(resizePromises)
-        await batch(stitchPromises)
-        await batch(colorPromises)
+        await util.serialBatchPromises(resizePromises)
+        await util.serialBatchPromises(stitchPromises)
+        await util.serialBatchPromises(colorPromises)
         resolve()
     })
 }
@@ -253,9 +236,11 @@ const archive = (bookInfo, workDirs)=>{
     const exportPath = path.join(workDirs.export, exportFile)
     return new Promise((resolve)=>{
         const output = fs.createWriteStream(exportPath)
+        // The images are already compressed, I just want them in a CBZ format
+        // However, zlib generates invalid archives on Android when compression level 0 is used
         const archive = archiver('zip', {
             zlib: {
-                level: 0 //The images are already compressed, I just want them in a CBZ format
+                level: 1
             }
         })
         output.on('close', ()=>{

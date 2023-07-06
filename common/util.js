@@ -127,6 +127,26 @@ if (typeof window !== 'undefined') {
     windowStub = window
 }
 
+const DEFAULT_BATCH_SIZE = 7
+const serialBatchPromises = (promiseMakers, batchSize)=>{
+    if(!batchSize){
+        batchSize = DEFAULT_BATCH_SIZE
+    }
+    return new Promise(async (resolve)=>{
+        if(promiseMakers.length === 0){
+            return resolve()
+        }
+        for(let ii = 0; ii < promiseMakers.length; ii += batchSize){
+            await Promise.all(promiseMakers.slice(ii, ii + batchSize).map((p)=>{
+                let res = p()
+                serverLog(res.message)
+                return res.promise
+            }))
+        }
+        resolve()
+    })
+}
+
 module.exports = {
     browserGetMediaProfiles,
     clientLog,
@@ -137,6 +157,7 @@ module.exports = {
     loadTooltips,
     queryParams,
     queryString,
+    serialBatchPromises,
     serverLog,
     window: windowStub,
 }
