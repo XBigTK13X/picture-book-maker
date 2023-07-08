@@ -156,6 +156,11 @@ const stitch = (bookInfo, workDirs)=>{
         }
 
         util.serverLog(`Found a minimum image size of ${min.width} x ${min.height}`)
+        if(min.width > 2000 || min.height > 2000){
+            util.serverLog(`Cutting minimum resolution in half to decrease output size`)
+            min.height = Math.floor(min.height / 2)
+            min.width = Math.floor(min.width / 2)
+        }
 
         let resizePromises = []
         let stitchPromises = []
