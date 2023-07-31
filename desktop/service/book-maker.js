@@ -133,11 +133,11 @@ const stitch = (bookInfo, workDirs)=>{
         await imageMagick.convert(files[0], frontCover)
         await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
         if(settings.localLibraryPath){
-            let thumbnailPath = path.join(settings.localLibraryPath, workFile(0))
+            let thumbnailPath = path.join(settings.localLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
             await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
         }
         if(settings.remoteLibraryPath){
-            let thumbnailPath = path.join(settings.remoteLibraryPath, workFile(0))
+            let thumbnailPath = path.join(settings.remoteLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
             await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
         }
 
