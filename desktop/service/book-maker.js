@@ -128,10 +128,19 @@ const stitch = (bookInfo, workDirs)=>{
 
         util.serverLog(`Preparing covers`)
         const frontCover = path.join(mergeDir, workFile(0))
-        const frontCoverOutput = path.join(colorDir, workFile(0,EXPORT_FORMAT))
+        const frontCoverOutput = path.join(colorDir, workFile(0, EXPORT_FORMAT))
         const brightness = settings.colorCorrection.brightnessPercent
         await imageMagick.convert(files[0], frontCover)
         await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
+        if(settings.localLibraryPath){
+            let thumbnailPath = path.join(settings.localLibraryPath, workFile(0))
+            await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+        }
+        if(settings.remoteLibraryPath){
+            let thumbnailPath = path.join(settings.remoteLibraryPath, workFile(0))
+            await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+        }
+
         let backCoverIndex = files.length - 1
         if(bookInfo.collateBackwards){
             backCoverIndex = bookInfo.getReverseIndex()
@@ -156,10 +165,14 @@ const stitch = (bookInfo, workDirs)=>{
         }
 
         util.serverLog(`Found a minimum image size of ${min.width} x ${min.height}`)
-        if(min.width > 2000 || min.height > 2000){
-            util.serverLog(`Cutting minimum resolution in half to decrease output size`)
-            min.height = Math.floor(min.height / 2)
-            min.width = Math.floor(min.width / 2)
+        if(!bookInfo.skipShrink){
+            if(min.width > 2000 || min.height > 2000){
+                util.serverLog(`Cutting minimum resolution in half to decrease output size`)
+                min.height = Math.floor(min.height / 2)
+                min.width = Math.floor(min.width / 2)
+            }
+        } else {
+            util.serverLog(`Book marked to skip shrinking`)
         }
 
         let resizePromises = []

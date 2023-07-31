@@ -121,6 +121,8 @@ module.exports = () => {
             <label for="check-skip-stitching">Skip Stitching</label>]
             [<input id="check-single-rotation" name="check-single-rotation" type="checkbox"${bookInfo.singleRotation ? ' checked' : ''}/>
             <label for="check-single-rotation">Single Rotation</label>]
+            [<input id="check-skip-shrink" name="check-skip-shrink" type="checkbox"${bookInfo.skipShrink ? ' checked' : ''}/>
+            <label for="check-skip-shrink">Skip Shrink</label>]
             [Orientation
             <select id="select-orientation">
                 <option value="up">up</option>
@@ -229,6 +231,10 @@ module.exports = () => {
         $('#check-sequential-stitching').on('change', (jQEvent)=>{
             book.toggleSequentialStitching(query.sourceIndex, query.bookName)
             bookInfo.sequentialStitching = !bookInfo.sequentialStitching
+        })
+        $('#check-skip-shrink').on('change', (jQEvent)=>{
+            book.toggleSkipShrink(query.sourceIndex, query.bookName)
+            bookInfo.skipShrink = !bookInfo.skipShrink
         })
         $('#select-orientation').on('change', (jQEvent)=>{
             const element = $(jQEvent.target)

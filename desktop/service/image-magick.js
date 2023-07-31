@@ -221,6 +221,23 @@ const resize = (inputPath, width, height, outputPath)=>{
     })
 }
 
+const resizeGentle = (inputPath, width, height, outputPath)=>{
+    return new Promise((resolve)=>{
+        const args = [
+            'convert',
+            inputPath,
+            '-resize',
+            `${width}x${height}`,
+            '-strip',
+            outputPath
+        ]
+        const magick = spawn(settings.imageMagickBinary, args, settings.spawnOptions)
+        magick.on('exit', (code)=>{
+            resolve()
+        })
+    })
+}
+
 const normalize = (inputPath, brightnessPercent, outputPath)=>{
     return new Promise((resolve)=>{
         const args = [
@@ -246,6 +263,7 @@ module.exports = {
     distort,
     normalize,
     resize,
+    resizeGentle,
     rotate,
     stitch
 }

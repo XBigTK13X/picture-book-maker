@@ -156,6 +156,15 @@ const setFirstPageOrientation = (sourceIndex, bookName, orientation) => {
     return info
 }
 
+const toggleSkipShrink = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSkipShrink()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
@@ -166,6 +175,6 @@ module.exports = {
     toggleCollate,
     toggleSequentialStitching,
     toggleSingleRotation,
-    toggleSkipStitching
-
+    toggleSkipStitching,
+    toggleSkipShrink
 }
