@@ -5,6 +5,7 @@ const fs = require('fs')
 const infoDir = '00-info'
 const extractDir = '10-extract'
 const stitchDir = '20-stitch'
+const outputDir = '25-output'
 const exportDir = '30-export'
 
 const prepDir = (bookName) => {
@@ -14,29 +15,11 @@ const prepDir = (bookName) => {
     if (!fs.existsSync(settings.dataDir)){
         fs.mkdirSync(settings.dataDir);
     }
-    const workDir = path.join(settings.dataDir,'work/')
-    if (!fs.existsSync(workDir)){
-        fs.mkdirSync(workDir);
-    }
-    const bookWorkDir = path.join(workDir, bookName+'/')
-    if (!fs.existsSync(bookWorkDir)){
-        fs.mkdirSync(bookWorkDir);
-    }
-    const info = path.join(bookWorkDir, infoDir + '/')
-    if(!fs.existsSync(info)){
-        fs.mkdirSync(info)
-    }
-    const extract = path.join(bookWorkDir, extractDir + '/')
-    if(!fs.existsSync(extract)){
-        fs.mkdirSync(extract);
-    }
-    const stitch = path.join(bookWorkDir, stitchDir + '/')
-    if(!fs.existsSync(stitch)){
-        fs.mkdirSync(path.join(bookWorkDir, stitchDir + '/'))
-    }
-    const output = path.join(bookWorkDir, exportDir + '/')
-    if(!fs.existsSync(output)){
-        fs.mkdirSync(path.join(bookWorkDir, exportDir + '/'))
+    const dirs = getDirs(bookName)
+    for(let key of Object.keys(dirs)){
+        if (!fs.existsSync(dirs[key])){
+            fs.mkdirSync(dirs[key])
+        }
     }
 }
 
@@ -46,33 +29,24 @@ const getDirs = (bookName) => {
     }
     const infoPath = path.join(settings.dataDir,'work/', bookName+'/', infoDir+'/')
     const extractPath = path.join(settings.dataDir,'work/', bookName+'/', extractDir+'/')
-    if(!fs.existsSync(infoPath) || !fs.existsSync(extractPath)){
-        prepDir(bookName)
-    }
+    const stitchPath = path.join(settings.dataDir, 'work/', bookName+'/', stitchDir+'/')
     return {
-        root: path.join(settings.dataDir,'work/', bookName+'/'),
-        info: infoPath,
+        root:    path.join(settings.dataDir,'work/', bookName+'/'),
+        info:    infoPath,
         extract: extractPath,
-        stitch: path.join(settings.dataDir,'work/', bookName+'/', stitchDir+'/'),
-        export: path.join(settings.dataDir,'work/', bookName+'/', exportDir+'/')
+        distort: path.join(extractPath, '10-distort/'),
+        crop:    path.join(extractPath, '20-crop/'),
+        rotate:  path.join(extractPath, '30-rotate/'),
+        stitch:  stitchPath,
+        resize:  path.join(stitchPath,'10-resize/'),
+        merge:   path.join(stitchPath,'20-merge/'),
+        color:   path.join(stitchPath,'30-color/'),
+        output:  path.join(settings.dataDir, 'work/', bookName+'/', outputDir+'/'),
+        export:  path.join(settings.dataDir, 'work/', bookName+'/', exportDir+'/'),
     }
-}
-
-const clean = (bookName) => {
-    if(!bookName){
-        return null
-    }
-    const dirs = getDirs(bookName)
-    fs.rmSync(dirs.extract, {recursive: true, force: true})
-    fs.rmSync(dirs.stitch, {recursive: true, force: true})
-    fs.rmSync(dirs.export, {recursive: true, force: true})
-    fs.mkdirSync(dirs.extract)
-    fs.mkdirSync(dirs.stitch)
-    fs.mkdirSync(dirs.export)
 }
 
 module.exports = {
-    clean,
     getDirs,
     prepDir
 }

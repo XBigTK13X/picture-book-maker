@@ -1,3 +1,4 @@
+const fs = require('fs')
 const spawn = require('child_process').spawn
 const settings = require('../../common/settings')
 
@@ -254,6 +255,18 @@ const normalize = (inputPath, brightnessPercent, outputPath)=>{
         magick.on('exit', (code)=>{
             resolve()
         })
+    })
+}
+
+const copy = (inputPath, outputPath) => {
+    return new Promise((resolve,reject)=>{
+        fs.copyFile(inputPath, outputPath, (err)=>{
+            if(err){
+                return reject(err)
+            }
+            return resolve()
+        })
+        resolve()
     })
 }
 

@@ -123,6 +123,8 @@ module.exports = () => {
             <label for="check-single-rotation">Single Rotation</label>]
             [<input id="check-skip-shrink" name="check-skip-shrink" type="checkbox"${bookInfo.skipShrink ? ' checked' : ''}/>
             <label for="check-skip-shrink">Skip Shrink</label>]
+            [<input id="check-skip-coloring" name="check-skip-coloring" type="checkbox"${bookInfo.skipColoring ? ' checked' : ''}/>
+            <label for="check-skip-coloring">Skip Coloring</label>]
             [Orientation
             <select id="select-orientation">
                 <option value="up">up</option>
@@ -235,6 +237,10 @@ module.exports = () => {
         $('#check-skip-shrink').on('change', (jQEvent)=>{
             book.toggleSkipShrink(query.sourceIndex, query.bookName)
             bookInfo.skipShrink = !bookInfo.skipShrink
+        })
+        $('#check-skip-coloring').on('change', (jQEvent)=>{
+            book.toggleSkipColoring(query.sourceIndex, query.bookName)
+            bookInfo.skipColoring = !bookInfo.skipColoring
         })
         $('#select-orientation').on('change', (jQEvent)=>{
             const element = $(jQEvent.target)

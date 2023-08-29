@@ -23,15 +23,15 @@ class IpcServer {
             util.serverLog(`Processing [${options.bookName}]`)
             const start = Date.now();
             const bookInfo = book.getInfo(options.sourceIndex, options.bookName)
-            //workspace.clean(options.bookName)
+            workspace.prepDir(options.bookName)
             const workDirs = workspace.getDirs(options.bookName)
             util.serverLog(`Extracting [${options.bookName}]`)
             return bookMaker.extract(bookInfo, workDirs)
-            .then(()=>{
+            .then((bookInfo)=>{
                 util.serverLog(`Stitching [${options.bookName}]`)
                 return bookMaker.stitch(bookInfo, workDirs)
             })
-            .then(()=>{
+            .then((bookInfo)=>{
                 util.serverLog(`Archiving [${options.bookName}]`)
                 return bookMaker.archive(bookInfo, workDirs)
             })

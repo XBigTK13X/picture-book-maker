@@ -165,6 +165,15 @@ const toggleSkipShrink = (sourceIndex, bookName) => {
     return info
 }
 
+const toggleSkipColoring = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSkipColoring()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
@@ -176,5 +185,6 @@ module.exports = {
     toggleSequentialStitching,
     toggleSingleRotation,
     toggleSkipStitching,
-    toggleSkipShrink
+    toggleSkipShrink,
+    toggleSkipColoring
 }

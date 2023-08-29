@@ -18,120 +18,128 @@ const WORK_FORMAT = '.jpg'
 const EXPORT_FORMAT = '.jpg'
 
 const workFile = (sortIndex, format)=>{
+    if(!sortIndex && sortIndex !==0){
+        throw new Error(`sortIndex is required. Was passed [${sortIndex}]`)
+    }
     return (""+((sortIndex + 5) * 10)).padStart(6, '0') + (format?format:WORK_FORMAT)
 }
 
-const extract = (bookInfo, workDirs)=>{
+const _distort = (bookInfo, workDirs)=>{
     return new Promise(async (resolve)=>{
+        util.serverLog(`Distorting images in book`)
         const pageKeys = bookInfo.getKeys()
         let distortIndex = 1
         let promises = []
-        const distortDir = path.join(workDirs.extract,'10-distort/')
-        if(!fs.existsSync(distortDir)){
-            fs.mkdirSync(distortDir)
-        }
+
         for(let pageKey of pageKeys){
             const page = bookInfo.pages[pageKey]
             const inputPath = page.filePath
-            const outputPath = path.join(distortDir, workFile(page.sortIndex))
+            const outputPath = path.join(workDirs.distort, workFile(page.sortIndex))
             if(fs.existsSync(outputPath)){
                 continue
             }
             promises.push(()=>{return {
                 promise: imageMagick.distort(inputPath, page.selection, outputPath),
-                message: `Distort image ${distortIndex++} of ${pageKeys.length}`
+                message: `Distort image (${distortIndex++}/${pageKeys.length})`
             }})
         }
-
         await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.distort
+        resolve(bookInfo)
+    })
+}
+
+const _crop = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        util.serverLog(`Cropping files from dir [${bookInfo.previousStepDir}]`)
+        const pageKeys = bookInfo.getKeys()
         let cropIndex = 1
-        promises = []
-        const cropDir = path.join(workDirs.extract, '20-crop/')
-        if(!fs.existsSync(cropDir)){
-            fs.mkdirSync(cropDir)
-        }
+        let promises = []
+
         for(let pageKey of pageKeys){
             const page = bookInfo.pages[pageKey]
-            const inputPath = path.join(distortDir, workFile(page.sortIndex))
-            const outputPath = path.join(cropDir, workFile(page.sortIndex))
+            const inputPath = path.join(bookInfo.previousStepDir, workFile(page.sortIndex))
+            const outputPath = path.join(workDirs.crop, workFile(page.sortIndex))
             if(fs.existsSync(outputPath)){
                 continue
             }
             promises.push(()=>{return {
                 promise: imageMagick.crop(inputPath, page.selection, outputPath),
-                message: `Crop image ${cropIndex++} of ${pageKeys.length}`
+                message: `Crop image (${cropIndex++}/${pageKeys.length})`
             }})
         }
         await util.serialBatchPromises(promises)
-
-        if(!bookInfo.skipStitching){
-            let rotateIndex = 1
-            promises = []
-            const reverseIndex = bookInfo.getReverseIndex()
-            const rotateDir = path.join(workDirs.extract, '30-rotate/')
-            if(!fs.existsSync(rotateDir)){
-                fs.mkdirSync(rotateDir)
-            }
-            for(let ii = 0; ii < pageKeys.length; ii++){
-                const page = bookInfo.pages[pageKeys[ii]]
-                let rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-                if(ii >= reverseIndex){
-                    rotation += 180
-                }
-                if(bookInfo.sequentialStitching){
-                    rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-                    if(ii % 2 === 1){
-                        rotation += 180
-                    }
-                }
-                if(bookInfo.singleRotation){
-                    rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
-                }
-                const inputPath = path.join(cropDir, workFile(page.sortIndex))
-                const outputPath = path.join(rotateDir, workFile(page.sortIndex))
-                if(fs.existsSync(outputPath)){
-                    continue
-                }
-                promises.push(()=>{return {
-                    promise: imageMagick.rotate(inputPath, rotation, outputPath),
-                    message: `Rotate image ${rotateIndex++} of ${pageKeys.length}`
-                }})
-            }
-            await util.serialBatchPromises(promises)
-        }
-        resolve()
+        bookInfo.previousStepDir = workDirs.crop
+        resolve(bookInfo)
     })
 }
 
-const stitch = (bookInfo, workDirs)=>{
+const _rotate = (bookInfo, workDirs)=>{
     return new Promise(async (resolve)=>{
-        let sourceFiles = path.join(workDirs.extract,'30-rotate/')
-        if(bookInfo.skipStitching){
-            sourceFiles = path.join(workDirs.extract,'20-crop/')
-        }
-        const files = util.getFiles(sourceFiles)
-        files.sort((a,b)=>{
+        util.serverLog(`Rotating files from dir [${bookInfo.previousStepDir}]`)
+        const sortedFiles = util.getFiles(bookInfo.previousStepDir)
+        sortedFiles.sort((a,b)=>{
             return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
         })
-        const resizeDir = path.join(workDirs.stitch, '10-resize/')
-        if(!fs.existsSync(resizeDir)){
-            fs.mkdirSync(resizeDir)
+        let rotateIndex = 1
+        let promises = []
+        const reverseIndex = bookInfo.getReverseIndex()
+        for(let ii = 0; ii < sortedFiles.length; ii++){
+            const page = sortedFiles[ii]
+            let rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
+            if(ii >= reverseIndex){
+                rotation += 180
+            }
+            if(bookInfo.sequentialStitching){
+                rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
+                if(ii % 2 === 1){
+                    rotation += 180
+                }
+            }
+            if(bookInfo.singleRotation){
+                rotation = ROTATION_LOOKUP[bookInfo.firstPageOrientation]
+            }
+            const inputPath = path.join(bookInfo.previousStepDir, workFile(ii))
+            const outputPath = path.join(workDirs.rotate, workFile(ii))
+            if(fs.existsSync(outputPath)){
+                continue
+            }
+            promises.push(()=>{return {
+                promise: imageMagick.rotate(inputPath, rotation, outputPath),
+                message: `Rotate image (${rotateIndex++}/${sortedFiles.length})`
+            }})
         }
-        const mergeDir = path.join(workDirs.stitch, '20-merge/')
-        if(!fs.existsSync(mergeDir)){
-            fs.mkdirSync(mergeDir)
-        }
-        const colorDir = path.join(workDirs.stitch, '30-color/')
-        if(!fs.existsSync(colorDir)){
-            fs.mkdirSync(colorDir)
-        }
+        await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.rotate
+        resolve(bookInfo)
+    })
+}
 
-        util.serverLog(`Preparing covers`)
-        const frontCover = path.join(mergeDir, workFile(0))
-        const frontCoverOutput = path.join(colorDir, workFile(0, EXPORT_FORMAT))
+const extract = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        bookInfo = await _distort(bookInfo, workDirs)
+        bookInfo = await _crop(bookInfo, workDirs)
+        bookInfo = await _rotate(bookInfo, workDirs)
+        resolve(bookInfo)
+    })
+}
+
+const _covers = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        util.serverLog(`Preparing covers from files from dir [${bookInfo.previousStepDir}]`)
+        const sortedFiles = util.getFiles(bookInfo.previousStepDir)
+        sortedFiles.sort((a,b)=>{
+            return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
+        })
+        const frontCover = path.join(bookInfo.previousStepDir, workFile(0))
+        const frontCoverOutput = path.join(workDirs.output, workFile(0, EXPORT_FORMAT))
         const brightness = settings.colorCorrection.brightnessPercent
-        await imageMagick.convert(files[0], frontCover)
-        await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
+        if(bookInfo.skipColoring){
+            await imageMagick.convert(sortedFiles[0], frontCoverOutput)
+        } else {
+            await imageMagick.convert(sortedFiles[0], frontCover)
+            await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
+        }
         if(settings.localLibraryPath){
             let thumbnailPath = path.join(settings.localLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
             await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
@@ -141,15 +149,27 @@ const stitch = (bookInfo, workDirs)=>{
             await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
         }
 
-        let backCoverIndex = files.length - 1
+        let backCoverIndex = sortedFiles.length - 1
         if(bookInfo.collateBackwards){
             backCoverIndex = bookInfo.getReverseIndex()
         }
-        const backCover = path.join(mergeDir, workFile(files.length + 5, EXPORT_FORMAT))
-        const backCoverOutput = path.join(colorDir, workFile(files.length + 5, EXPORT_FORMAT))
-        await imageMagick.convert(files[backCoverIndex], backCover)
-        await imageMagick.normalize(backCover, brightness.cover, backCoverOutput)
+        const backCover = path.join(bookInfo.previousStepDir, workFile(sortedFiles.length + 5))
+        const backCoverOutput = path.join(workDirs.output, workFile(sortedFiles.length + 5, EXPORT_FORMAT))
+        if(bookInfo.skipColoring){
+            await imageMagick.convert(sortedFiles[backCoverIndex], backCoverOutput)
+        } else {
+            await imageMagick.convert(sortedFiles[backCoverIndex], backCover)
+            await imageMagick.normalize(backCover, brightness.cover, backCoverOutput)
+        }
+        resolve(bookInfo)
+    })
+}
 
+const _resize = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        util.serverLog(`Resizing files from dir [${bookInfo.previousStepDir}]`)
+        const files = util.getFiles(bookInfo.previousStepDir)
+        let promises = []
         let min = {
             height: 1000000,
             width:  1000000
@@ -172,86 +192,138 @@ const stitch = (bookInfo, workDirs)=>{
                 min.width = Math.floor(min.width / 2)
             }
         } else {
-            util.serverLog(`Book marked to skip shrinking`)
+            util.serverLog(`Book configured to skip shrinking`)
         }
 
-        let resizePromises = []
-        let stitchPromises = []
-        let colorPromises = []
+        for(let ii=0; ii<files.length; ii++){
+            const resizedPage = path.join(workDirs.resize, path.basename(files[ii]))
+            if(!fs.existsSync(resizedPage)){
+                promises.push(()=>{return {
+                    promise: imageMagick.resize(files[ii], min.width, min.height, resizedPage),
+                    message: `Resize left page image (${ii}/${files.length})`
+                }})
+            }
+        }
+
+        await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.resize
+        resolve(bookInfo)
+    })
+}
+
+const _merge = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
         if(bookInfo.skipStitching){
-            for(let ii = 1; ii < files.length - 1; ii++){
-                const page = files[ii]
-                const pageResized = path.join(resizeDir, path.basename(page))
-                if(!fs.existsSync(pageResized)){
-                    resizePromises.push(()=>{return {
-                        promise: imageMagick.resize(page, min.width, min.height, pageResized),
-                        message: `Resize page image [${ii}] (${ii}/${files.length - 2})`
+            return resolve(bookInfo)
+        }
+        util.serverLog(`Merging files from dir [${bookInfo.previousStepDir}]`)
+        const sortedFiles = util.getFiles(bookInfo.previousStepDir)
+        sortedFiles.sort((a,b)=>{
+            return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
+        })
+        let promises = []
+        const stitchMiddleIndex = bookInfo.sequentialStitching ? sortedFiles.length - 2 : bookInfo.getReverseIndex()
+        const stitchIncrement = bookInfo.sequentialStitching ? 2 : 1
+        let mergeIndex = 1
+        for(let ii = 1; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
+            let leftPageIndex = ii + stitchMiddleIndex - 1
+            let rightPageIndex = ii
+            if(bookInfo.collateBackwards){
+                leftPageIndex = (sortedFiles.length - ii)
+            }
+            if(bookInfo.sequentialStitching){
+                leftPageIndex = ii
+                rightPageIndex = ii+1
+            }
+            const leftPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[leftPageIndex]))
+            const rightPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[rightPageIndex]))
+            const mergeFile = path.join(workDirs.merge, workFile(ii))
+            if(!fs.existsSync(mergeFile)){
+                promises.push(()=>{return {
+                    promise: imageMagick.stitch(leftPage, rightPage, mergeFile),
+                    message: `Stitching images ${ii} and ${leftPageIndex}. Merge (${mergeIndex++}/${stitchMiddleIndex/2})`
+                }})
+            }
+        }
+        await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.merge
+        resolve(bookInfo)
+    })
+}
+
+const _color = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        if(bookInfo.skipColoring){
+            return resolve(bookInfo)
+        }
+        util.serverLog(`Coloring files from dir [${bookInfo.previousStepDir}]`)
+        let promises = []
+        const files = util.getFiles(bookInfo.previousStepDir)
+        for(let ii = 0; ii < files.length; ii++){
+            const colorFile = path.join(workDirs.color, workFile(ii))
+            if(!fs.existsSync(colorFile)){
+                promises.push(()=>{return {
+                    promise: imageMagick.normalize(files[ii], brightness.page, colorFile),
+                    message: `Color correcting image (${ii}/${files.length})`
+                }})
+            }
+        }
+        await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.color
+        resolve(bookInfo)
+    })
+}
+
+const _output = async (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        util.serverLog(`Outputting files from dir [${bookInfo.previousStepDir}]`)
+        const files = util.getFiles(bookInfo.previousStepDir)
+        let promises = []
+        for(let ii=0; ii< files.length; ii++){
+            let parsedPath = path.parse(files[ii])
+            const outputFile = path.join(workDirs.output, parsedPath.name + EXPORT_FORMAT)
+            if(!fs.existsSync(outputFile)){
+                if(parsedPath.ext === EXPORT_FORMAT){
+                    promises.push(()=>{return {
+                        promise: imageMagick.convert(files[ii], outputFile),
+                        message: `Copying image to output dir (${ii}/${files.length})`
                     }})
                 }
-                const colorFile = path.join(colorDir, workFile(ii,EXPORT_FORMAT))
-                if(!fs.existsSync(colorFile)){
-                    colorPromises.push(()=>{return {
-                        promise: imageMagick.normalize(pageResized, brightness.page, colorFile),
-                        message: `Color correcting image ${ii}`
+                else {
+                    promises.push(()=>{return {
+                        promise: imageMagick.convert(files[ii], outputFile),
+                        message: `Converting image to target export format (${ii}/${files.length})`
                     }})
                 }
             }
         }
-        else {
-            const stitchMiddleIndex = bookInfo.sequentialStitching ? files.length - 2 : bookInfo.getReverseIndex()
-            const stitchIncrement = bookInfo.sequentialStitching ? 2 : 1
-            for(let ii = 1; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
-                let leftPageIndex = ii + stitchMiddleIndex - 1
-                let rightPageIndex = ii
-                if(bookInfo.collateBackwards){
-                    leftPageIndex = (files.length - ii)
-                }
-                if(bookInfo.sequentialStitching){
-                    leftPageIndex = ii
-                    rightPageIndex = ii+1
-                }
-                const leftPage = files[leftPageIndex]
-                const rightPage = files[rightPageIndex]
-                const leftPageResized = path.join(resizeDir, path.basename(leftPage))
-                const rightPageResized = path.join(resizeDir, path.basename(rightPage))
-                if(!fs.existsSync(leftPageResized)){
-                    resizePromises.push(()=>{return {
-                        promise: imageMagick.resize(leftPage, min.width, min.height, leftPageResized),
-                        message: `Resize left page image [${leftPageIndex}] (${ii}/${stitchMiddleIndex-1})`
-                    }})
-                }
-                if(!fs.existsSync(rightPageResized)){
-                    resizePromises.push(()=>{return {
-                        promise: imageMagick.resize(rightPage, min.width, min.height, rightPageResized),
-                        message: `Resize right page image [${ii} (${ii}/${stitchMiddleIndex-1})]`
-                    }})
-                }
-                const mergeFile = path.join(mergeDir, workFile(ii))
-                if(!fs.existsSync(mergeFile)){
-                    stitchPromises.push(()=>{return {
-                        promise: imageMagick.stitch(leftPageResized, rightPageResized, mergeFile),
-                        message: `Stitching images ${ii} and ${leftPageIndex} (${ii}/${stitchMiddleIndex-1})`
-                    }})
-                }
-                const colorFile = path.join(colorDir, workFile(ii,EXPORT_FORMAT))
-                if(!fs.existsSync(colorFile)){
-                    colorPromises.push(()=>{return {
-                        promise: imageMagick.normalize(mergeFile, brightness.page, colorFile),
-                        message: `Color correcting image ${ii}`
-                    }})
-                }
-            }
-        }
-        await util.serialBatchPromises(resizePromises)
-        await util.serialBatchPromises(stitchPromises)
-        await util.serialBatchPromises(colorPromises)
-        resolve()
+        await util.serialBatchPromises(promises)
+        bookInfo.previousStepDir = workDirs.output
+        resolve(bookInfo)
+    })
+}
+
+const stitch = (bookInfo, workDirs)=>{
+    return new Promise(async (resolve)=>{
+        const sortedFiles = util.getFiles(bookInfo.previousStepDir)
+        sortedFiles.sort((a,b)=>{
+            return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
+        })
+
+        bookInfo = await _covers(bookInfo, workDirs)
+        bookInfo = await _resize(bookInfo, workDirs)
+        bookInfo = await _merge(bookInfo, workDirs)
+        bookInfo = await _color(bookInfo, workDirs)
+        bookInfo = await _output(bookInfo, workDirs)
+
+        resolve(bookInfo)
     })
 }
 
 const archive = (bookInfo, workDirs)=>{
     const exportFile = bookInfo.bookName + ".cbz"
     const exportPath = path.join(workDirs.export, exportFile)
+    input_dir = path.join(workDirs.output)
     return new Promise((resolve)=>{
         const output = fs.createWriteStream(exportPath)
         // The images are already compressed, I just want them in a CBZ format
@@ -265,7 +337,7 @@ const archive = (bookInfo, workDirs)=>{
             resolve()
         })
         archive.pipe(output)
-        archive.directory(path.join(workDirs.stitch,'30-color/'), bookInfo.bookName)
+        archive.directory(input_dir, bookInfo.bookName)
         archive.finalize()
     })
     .then(()=>{
