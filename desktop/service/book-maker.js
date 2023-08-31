@@ -195,7 +195,7 @@ const _resize = (bookInfo, workDirs)=>{
             util.serverLog(`Book configured to skip shrinking`)
         }
 
-        for(let ii=0; ii<files.length; ii++){
+        for(let ii=1; ii<files.length-1; ii++){
             const resizedPage = path.join(workDirs.resize, path.basename(files[ii]))
             if(!fs.existsSync(resizedPage)){
                 promises.push(()=>{return {
