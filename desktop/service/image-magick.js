@@ -278,5 +278,6 @@ module.exports = {
     resize,
     resizeGentle,
     rotate,
-    stitch
+    stitch,
+    copy
 }

@@ -137,7 +137,8 @@ const serialBatchPromises = (promiseMakers, batchSize)=>{
             return resolve()
         }
         for(let ii = 0; ii < promiseMakers.length; ii += batchSize){
-            await Promise.all(promiseMakers.slice(ii, ii + batchSize).map((p)=>{
+            let subset = promiseMakers.slice(ii, ii + batchSize)
+            await Promise.all(subset.map((p)=>{
                 let res = p()
                 serverLog(res.message)
                 return res.promise

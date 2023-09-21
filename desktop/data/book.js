@@ -89,6 +89,7 @@ const getInfo = (sourceIndex, bookName) => {
         }
         sortIndex += 1
     }
+    workspace.prepDir(bookName)
     fs.writeFileSync(infoPath, info.toJson())
     return info
 }
@@ -174,6 +175,15 @@ const toggleSkipColoring = (sourceIndex, bookName) => {
     return info
 }
 
+const toggleSkipArchive = (sourceIndex, bookName) => {
+    const workDirs = workspace.getDirs(bookName)
+    const info = getInfo(sourceIndex, bookName)
+    info.toggleSkipArchive()
+    const infoPath = path.join(workDirs.info, 'info.json')
+    fs.writeFileSync(infoPath, info.toJson())
+    return info
+}
+
 module.exports = {
     getPages,
     movePages,
@@ -186,5 +196,6 @@ module.exports = {
     toggleSingleRotation,
     toggleSkipStitching,
     toggleSkipShrink,
-    toggleSkipColoring
+    toggleSkipColoring,
+    toggleSkipArchive
 }

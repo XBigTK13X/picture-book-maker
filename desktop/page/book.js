@@ -125,6 +125,8 @@ module.exports = () => {
             <label for="check-skip-shrink">Skip Shrink</label>]
             [<input id="check-skip-coloring" name="check-skip-coloring" type="checkbox"${bookInfo.skipColoring ? ' checked' : ''}/>
             <label for="check-skip-coloring">Skip Coloring</label>]
+            [<input id="check-skip-archive" name="check-skip-archive" type="checkbox"${bookInfo.skipArchive ? ' checked' : ''}/>
+            <label for="check-skip-archive">Skip Archive</label>]
             [Orientation
             <select id="select-orientation">
                 <option value="up">up</option>
@@ -241,6 +243,10 @@ module.exports = () => {
         $('#check-skip-coloring').on('change', (jQEvent)=>{
             book.toggleSkipColoring(query.sourceIndex, query.bookName)
             bookInfo.skipColoring = !bookInfo.skipColoring
+        })
+        $('#check-skip-archive').on('change', (jQEvent)=>{
+            book.toggleSkipArchive(query.sourceIndex, query.bookName)
+            bookInfo.skipArchive = !bookInfo.skipArchive
         })
         $('#select-orientation').on('change', (jQEvent)=>{
             const element = $(jQEvent.target)

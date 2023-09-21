@@ -140,13 +140,15 @@ const _covers = (bookInfo, workDirs)=>{
             await imageMagick.convert(sortedFiles[0], frontCover)
             await imageMagick.normalize(frontCover, brightness.cover, frontCoverOutput)
         }
-        if(settings.localLibraryPath){
-            let thumbnailPath = path.join(settings.localLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
-            await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
-        }
-        if(settings.remoteLibraryPath){
-            let thumbnailPath = path.join(settings.remoteLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
-            await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+        if(!bookInfo.skipArchive){
+            if(settings.localLibraryPath){
+                let thumbnailPath = path.join(settings.localLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
+                await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+            }
+            if(settings.remoteLibraryPath){
+                let thumbnailPath = path.join(settings.remoteLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
+                await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+            }
         }
 
         let backCoverIndex = sortedFiles.length - 1
@@ -222,10 +224,10 @@ const _merge = (bookInfo, workDirs)=>{
             return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
         })
         let promises = []
-        const stitchMiddleIndex = bookInfo.sequentialStitching ? sortedFiles.length - 2 : bookInfo.getReverseIndex()
+        const stitchMiddleIndex = bookInfo.sequentialStitching ? sortedFiles.length : bookInfo.getReverseIndex()
         const stitchIncrement = bookInfo.sequentialStitching ? 2 : 1
         let mergeIndex = 1
-        for(let ii = 1; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
+        for(let ii = 0; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
             let leftPageIndex = ii + stitchMiddleIndex - 1
             let rightPageIndex = ii
             if(bookInfo.collateBackwards){
@@ -237,11 +239,11 @@ const _merge = (bookInfo, workDirs)=>{
             }
             const leftPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[leftPageIndex]))
             const rightPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[rightPageIndex]))
-            const mergeFile = path.join(workDirs.merge, workFile(ii))
+            const mergeFile = path.join(workDirs.merge, workFile(ii+1))
             if(!fs.existsSync(mergeFile)){
                 promises.push(()=>{return {
                     promise: imageMagick.stitch(leftPage, rightPage, mergeFile),
-                    message: `Stitching images ${ii} and ${leftPageIndex}. Merge (${mergeIndex++}/${stitchMiddleIndex/2})`
+                    message: `Stitching images ${leftPageIndex} and ${rightPageIndex}. Merge (${mergeIndex++}/${stitchMiddleIndex/2})`
                 }})
             }
         }
@@ -285,7 +287,7 @@ const _output = async (bookInfo, workDirs)=>{
             if(!fs.existsSync(outputFile)){
                 if(parsedPath.ext === EXPORT_FORMAT){
                     promises.push(()=>{return {
-                        promise: imageMagick.convert(files[ii], outputFile),
+                        promise: imageMagick.copy(files[ii], outputFile),
                         message: `Copying image to output dir (${ii}/${files.length})`
                     }})
                 }
@@ -321,6 +323,11 @@ const stitch = (bookInfo, workDirs)=>{
 }
 
 const archive = (bookInfo, workDirs)=>{
+    if(bookInfo.skipArchive){
+        return new Promise(resolve=>{
+            return resolve(bookInfo)
+        })
+    }
     const exportFile = bookInfo.bookName + ".cbz"
     const exportPath = path.join(workDirs.export, exportFile)
     input_dir = path.join(workDirs.output)

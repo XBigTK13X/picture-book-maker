@@ -3,6 +3,7 @@ class BookInfo {
     constructor(bookName){
         this.bookName = bookName
         this.pages = {}
+        this.previousStepDir = null
         this.firstPageOrientation = 'up'
         this.category = 'Unsorted'
         this.collateBackwards = false
@@ -11,7 +12,7 @@ class BookInfo {
         this.singleRotation = false
         this.skipShrink = false
         this.skipColoring = false
-        this.previousStepDir = null
+        this.skipArchive = false
     }
 
     fromDict(dict){
@@ -25,6 +26,7 @@ class BookInfo {
         this.singleRotation = dict.singleRotation
         this.skipShrink = dict.skipShrink
         this.skipColoring = dict.skipColoring
+        this.skipArchive = dict.skipArchive
     }
 
     toJson(){
@@ -38,7 +40,8 @@ class BookInfo {
             sequentialStitching: this.sequentialStitching,
             singleRotation: this.singleRotation,
             skipShrink: this.skipShrink,
-            skipColoring: this.skipColoring
+            skipColoring: this.skipColoring,
+            skipArchive: this.skipArchive
         }, null, 4)
     }
 
@@ -91,6 +94,10 @@ class BookInfo {
 
     toggleSkipColoring(){
         this.skipColoring = !this.skipColoring
+    }
+
+    toggleSkipArchive(){
+        this.skipArchive = !this.skipArchive
     }
 
     setFirstPageOrientation(orientation){
