@@ -179,7 +179,7 @@ module.exports = () => {
         $('#process-action').on('click', (jQEvent)=>{
             const textElement = $('#book-category')
             const category = textElement.val()
-            if(!category || category === 'Unsorted' || !bookInfo.category || bookInfo.category === 'Unsorted'){
+            if(!bookInfo.skipArchive && (!category || category === 'Unsorted' || !bookInfo.category || bookInfo.category === 'Unsorted')){
                 require('electron').ipcRenderer.send(
                     'pbm-alert-no-category'
                 )

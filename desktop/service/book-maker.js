@@ -224,7 +224,7 @@ const _merge = (bookInfo, workDirs)=>{
             return parseInt(path.basename(a).split('.')[0],10) - parseInt(path.basename(b).split('.')[0],10)
         })
         let promises = []
-        const stitchMiddleIndex = bookInfo.sequentialStitching ? sortedFiles.length : bookInfo.getReverseIndex()
+        const stitchMiddleIndex = bookInfo.sequentialStitching ? sortedFiles.length-1 : bookInfo.getReverseIndex()
         const stitchIncrement = bookInfo.sequentialStitching ? 2 : 1
         let mergeIndex = 1
         for(let ii = 0; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
@@ -258,6 +258,7 @@ const _color = (bookInfo, workDirs)=>{
         if(bookInfo.skipColoring){
             return resolve(bookInfo)
         }
+        const brightness = settings.colorCorrection.brightnessPercent
         util.serverLog(`Coloring files from dir [${bookInfo.previousStepDir}]`)
         let promises = []
         const files = util.getFiles(bookInfo.previousStepDir)
