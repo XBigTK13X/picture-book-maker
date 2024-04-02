@@ -19,7 +19,7 @@ let config = {
         loadingMessage: 3000,
         delaySeek: 1000,
     },
-    dataDir: 'E:/data/pbm/',
+    dataDir: 'C:/aa/pbm/',
     imageMagickDir: '',
     imageMagcikBinary: null,
     sourceDirectories: [],
@@ -41,11 +41,7 @@ let config = {
     }
 }
 
-let overridePath = 'E:/data/pbm.js'
-
-if (process.platform === 'linux') {
-    overridePath = '/media/trove/share/software/pbm/pbm-overrides.js'
-}
+let overridePath = 'C:/aa/pbm/pbm.js'
 
 if (fs.existsSync(overridePath)) {
     const overrides = require(overridePath)
