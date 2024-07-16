@@ -133,6 +133,7 @@ const _covers = (bookInfo, workDirs)=>{
         })
         const frontCover = path.join(bookInfo.previousStepDir, workFile(0))
         const frontCoverOutput = path.join(workDirs.output, workFile(0, EXPORT_FORMAT))
+        util.serverLog(`Copying front cover from [${frontCover}]`)
         const brightness = settings.colorCorrection.brightnessPercent
         if(bookInfo.skipColoring){
             await imageMagick.convert(sortedFiles[0], frontCoverOutput)
@@ -155,14 +156,17 @@ const _covers = (bookInfo, workDirs)=>{
         if(bookInfo.collateBackwards){
             backCoverIndex = bookInfo.getReverseIndex()
         }
-        const backCover = path.join(bookInfo.previousStepDir, workFile(sortedFiles.length + 5))
-        const backCoverOutput = path.join(workDirs.output, workFile(sortedFiles.length + 5, EXPORT_FORMAT))
+        const backCover = path.join(bookInfo.previousStepDir, workFile(backCoverIndex))
+        const backCoverOutput = path.join(workDirs.output, workFile(backCoverIndex, EXPORT_FORMAT))
+        util.serverLog(`Copying back cover from ${backCover}`)
         if(bookInfo.skipColoring){
             await imageMagick.convert(sortedFiles[backCoverIndex], backCoverOutput)
         } else {
             await imageMagick.convert(sortedFiles[backCoverIndex], backCover)
             await imageMagick.normalize(backCover, brightness.cover, backCoverOutput)
         }
+        bookInfo.frontCover = frontCover
+        bookInfo.backCover = backCover
         resolve(bookInfo)
     })
 }
@@ -176,7 +180,10 @@ const _resize = (bookInfo, workDirs)=>{
             height: 1000000,
             width:  1000000
         }
-        for(let ii = 1; ii < files.length-1; ii++){
+        for(let ii = 0; ii < files.length; ii++){
+            if(files[ii] === bookInfo.frontCover || files[ii] === bookInfo.backCover){
+                continue
+            }
             const dimensions = sizeOf(files[ii])
             if(dimensions.width < min.width){
                 min.width = dimensions.width
@@ -197,7 +204,10 @@ const _resize = (bookInfo, workDirs)=>{
             util.serverLog(`Book configured to skip shrinking`)
         }
 
-        for(let ii=1; ii<files.length-1; ii++){
+        for(let ii=0; ii<files.length; ii++){
+            if(files[ii] === bookInfo.frontCover || files[ii] === bookInfo.backCover){
+                continue
+            }
             const resizedPage = path.join(workDirs.resize, path.basename(files[ii]))
             if(!fs.existsSync(resizedPage)){
                 promises.push(()=>{return {
@@ -228,17 +238,18 @@ const _merge = (bookInfo, workDirs)=>{
         const stitchIncrement = bookInfo.sequentialStitching ? 2 : 1
         let mergeIndex = 1
         for(let ii = 0; ii < stitchMiddleIndex; ii = ii + stitchIncrement){
-            let leftPageIndex = ii + stitchMiddleIndex - 1
-            let rightPageIndex = ii
+            let leftPageIndex = ii + stitchMiddleIndex
+            let rightPageIndex = ii + 1
             if(bookInfo.collateBackwards){
-                leftPageIndex = (sortedFiles.length - ii)
+                leftPageIndex = ii
+                rightPageIndex = (sortedFiles.length - ii - 1)
             }
             if(bookInfo.sequentialStitching){
                 leftPageIndex = ii
                 rightPageIndex = ii+1
             }
-            const leftPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[leftPageIndex]))
-            const rightPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[rightPageIndex]))
+            let leftPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[leftPageIndex]))
+            let rightPage = path.join(bookInfo.previousStepDir, path.basename(sortedFiles[rightPageIndex]))
             const mergeFile = path.join(workDirs.merge, workFile(ii+1))
             if(!fs.existsSync(mergeFile)){
                 promises.push(()=>{return {

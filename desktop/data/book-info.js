@@ -69,7 +69,7 @@ class BookInfo {
     }
 
     getReverseIndex(){
-        return Math.floor(Object.keys(this.pages).length / 2)
+        return Math.floor(Object.keys(this.pages).length / 2) 
     }
 
     toggleCollate(){
