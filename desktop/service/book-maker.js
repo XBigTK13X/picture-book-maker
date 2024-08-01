@@ -150,6 +150,10 @@ const _covers = (bookInfo, workDirs)=>{
                 let thumbnailPath = path.join(settings.remoteLibraryPath, ".thumbnails/", bookInfo.bookName + ".jpg")
                 await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
             }
+            if(settings.remoteExpandPath){
+                let thumbnailPath = path.join(settings.remoteExpandPath, ".thumbnails/", bookInfo.bookName + ".jpg")
+                await imageMagick.resizeGentle(frontCoverOutput, 400, 400, thumbnailPath)
+            }
         }
 
         let backCoverIndex = sortedFiles.length - 1
@@ -374,6 +378,13 @@ const archive = (bookInfo, workDirs)=>{
                     fs.mkdirSync(remoteDir)
                 }
                 fs.copyFileSync(exportPath, path.join(remoteDir, exportFile))
+            }
+            if(settings.remoteExpandPath){
+                let expandDir = path.join(settings.remoteExpandPath, bookInfo.category+"/")
+                if(!fs.existsSync(expandDir)){
+                    fs.mkdirSync(expandDir)
+                }
+                fs.cpSync(input_dir, path.join(expandDir, bookInfo.bookName),{recursive: true})
             }
             resolve()
         })
