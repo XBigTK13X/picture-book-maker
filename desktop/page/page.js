@@ -7,6 +7,7 @@ const TARGET_WIDTH = 22
 const BRACKET_LEFT = 219
 const BRACKET_RIGHT = 221
 const ENTER_KEY = 13
+const EQUAL_KEY = 187
 
 module.exports = () => {
     return new Promise((resolve, reject) => {
@@ -25,6 +26,7 @@ module.exports = () => {
             let dragSelection = false
             const pages = book.getPages(query.sourceIndex, query.bookName)
             bookInfo = book.getInfo(query.sourceIndex, query.bookName)
+            let doublePreviousPage = null
             let previousPage = null
             let nextPage = null
             let currentPage = null
@@ -32,6 +34,18 @@ module.exports = () => {
             for(let ii = 0; ii < pages.length; ii++){
                 const page = pages[ii]
                 if(page === query.image){
+                    if(pages.length > 2){
+                        if(ii === 0){
+                            doublePreviousPage = pages[pages.length - 2]
+                        }
+                        else if(ii === 1){
+                            doublePreviousPage = pages[pages.length - 1]
+                        }
+                        else {
+                            doublePreviousPage = pages[ii - 2]
+                        }
+                    }
+
                     if(ii === 0){
                         previousPage = pages[pages.length - 1]
                     } else {
@@ -165,8 +179,29 @@ module.exports = () => {
             $('#current-page').on('mouseup', unclickImage)
             $('#current-page').on('mousemove', dragImage)
             $(document).on('keydown', (jQEvent)=>{
+                console.log({jQEvent})
                 if(jQEvent.which === ENTER_KEY){
                     currentSelection = bookInfo.getSelection(previousPage) || []
+                    selectionMarkup = ''
+                    if(currentSelection.length > 0){
+                        for(let coord of currentSelection){
+                            let translatedCoords = coordinates.elementToWindow(coord.x, coord.y, imageElement)
+                            selectionMarkup += `
+                            <div style="pointer-events: none;
+                                        position: absolute;
+                                        left: ${translatedCoords.window.x - TARGET_WIDTH}px;
+                                        top: ${translatedCoords.window.y - TARGET_WIDTH}px;
+                                        opacity: 0.75;">
+                                <img src="../asset/img/target.png"/>
+                            </div>
+                        `
+                        }
+                        document.getElementById('selection-points').innerHTML = selectionMarkup
+                    }
+                    book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
+                }
+                if(jQEvent.which === EQUAL_KEY){
+                    currentSelection = bookInfo.getSelection(doublePreviousPage) || []
                     selectionMarkup = ''
                     if(currentSelection.length > 0){
                         for(let coord of currentSelection){
