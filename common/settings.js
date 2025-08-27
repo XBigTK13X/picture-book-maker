@@ -19,7 +19,7 @@ let config = {
         loadingMessage: 3000,
         delaySeek: 1000,
     },
-    dataDir: 'E:/data/pbm/',
+    dataDir: 'G:/pbm/',
     imageMagickDir: '',
     imageMagcikBinary: null,
     sourceDirectories: [],
@@ -41,7 +41,7 @@ let config = {
     }
 }
 
-let overridePath = 'E:/data/pbm.js'
+let overridePath = 'G:/pbm/pbm.js'
 
 if (fs.existsSync(overridePath)) {
     const overrides = require(overridePath)

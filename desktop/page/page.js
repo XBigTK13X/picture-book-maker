@@ -85,6 +85,7 @@ module.exports = () => {
             }
             // TODO Resizing will not properly update the selection placement on screen, but the data will be correct
             const clickImage = (jQEvent)=>{
+                // Left click to add a new point to the selection
                 if(jQEvent.button === LEFT_CLICK){
                     if(currentSelection.length >= 4){
                         currentSelection = []
@@ -107,6 +108,7 @@ module.exports = () => {
                         document.getElementById('selection-points').innerHTML = selectionMarkup
                     }
                 }
+                // Middle click to copy the previous page's selection
                 if(jQEvent.button === MIDDLE_CLICK){
                     currentSelection = bookInfo.getSelection(previousPage) || []
                     selectionMarkup = ''
@@ -127,6 +129,7 @@ module.exports = () => {
                     }
                     book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
                 }
+                // Right click and drag to reposition all points of the selection
                 if(jQEvent.button === RIGHT_CLICK){
                     dragSelection = true
                 }
@@ -179,7 +182,7 @@ module.exports = () => {
             $('#current-page').on('mouseup', unclickImage)
             $('#current-page').on('mousemove', dragImage)
             $(document).on('keydown', (jQEvent)=>{
-                console.log({jQEvent})
+                // Copy the selection points from the previous page
                 if(jQEvent.which === ENTER_KEY){
                     currentSelection = bookInfo.getSelection(previousPage) || []
                     selectionMarkup = ''
@@ -200,6 +203,7 @@ module.exports = () => {
                     }
                     book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
                 }
+                // Copy the selection points from two pages ago
                 if(jQEvent.which === EQUAL_KEY){
                     currentSelection = bookInfo.getSelection(doublePreviousPage) || []
                     selectionMarkup = ''
@@ -220,9 +224,11 @@ module.exports = () => {
                     }
                     book.setSelection(query.sourceIndex, query.bookName, query.image, currentSelection)
                 }
+                // Goto the previous page
                 if(jQEvent.which === BRACKET_LEFT){
                     window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${previousPage}`
                 }
+                // Goto the next page
                 if(jQEvent.which === BRACKET_RIGHT){
                     window.location.href = `page.html?sourceIndex=${query.sourceIndex}&bookName=${query.bookName}&image=${nextPage}`
                 }
