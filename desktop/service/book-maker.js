@@ -157,11 +157,8 @@ const _covers = (bookInfo, workDirs)=>{
         }
 
         let backCoverIndex = sortedFiles.length - 1
-        if(!bookInfo.collateBackwards){
+        if(bookInfo.collateBackwards && !bookInfo.sequentialStitching){
             backCoverIndex = bookInfo.getReverseIndex()
-        }
-        if(bookInfo.sequentialStitching){
-            backCoverIndex = sortedFiles.length - 1
         }
         const backCover = path.join(bookInfo.previousStepDir, workFile(backCoverIndex))
         const backCoverOutput = path.join(workDirs.output, workFile(backCoverIndex, EXPORT_FORMAT))
@@ -248,8 +245,8 @@ const _merge = (bookInfo, workDirs)=>{
             let leftPageIndex = ii
             let rightPageIndex = ii + stitchMiddleIndex
             if(bookInfo.collateBackwards){
-                leftPageIndex = ii
-                rightPageIndex = (sortedFiles.length - ii - 1)
+                rightPageIndex = ii
+                leftPageIndex = (sortedFiles.length - ii - 1)
             }
             if(bookInfo.sequentialStitching){
                 leftPageIndex = ii
