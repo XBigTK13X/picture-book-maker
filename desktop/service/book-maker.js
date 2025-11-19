@@ -180,29 +180,29 @@ const _resize = (bookInfo, workDirs)=>{
         util.serverLog(`Resizing files from dir [${bookInfo.previousStepDir}]`)
         const files = util.getFiles(bookInfo.previousStepDir)
         let promises = []
-        let min = {
-            height: 1000000,
-            width:  1000000
+        let normal = {
+            height: 0,
+            width:  0
         }
+        let countedFiles = 0
         for(let ii = 0; ii < files.length; ii++){
             if(files[ii] === bookInfo.frontCover || files[ii] === bookInfo.backCover){
                 continue
             }
             const dimensions = sizeOf(files[ii])
-            if(dimensions.width < min.width){
-                min.width = dimensions.width
-            }
-            if(dimensions.height < min.height){
-                min.height = dimensions.height
-            }
+            normal.height += dimensions.height
+            normal.width += dimensions.width
+            countedFiles += 1
         }
+        normal.height = Math.floor(normal.height / countedFiles)
+        normal.width = Math.floor(normal.width / countedFiles)
 
-        util.serverLog(`Found a minimum image size of ${min.width} x ${min.height}`)
+        util.serverLog(`Found an average image size of ${normal.width} x ${normal.height}`)
         if(!bookInfo.skipShrink){
-            if(min.width > 2000 || min.height > 2000){
-                util.serverLog(`Cutting minimum resolution in half to decrease output size`)
-                min.height = Math.floor(min.height / 2)
-                min.width = Math.floor(min.width / 2)
+            if(normal.width > 2000 || normal.height > 2000){
+                util.serverLog(`Cutting average resolution in half to decrease output size`)
+                normal.height = Math.floor(normal.height / 2)
+                normal.width = Math.floor(normal.width / 2)
             }
         } else {
             util.serverLog(`Book configured to skip shrinking`)
@@ -215,7 +215,7 @@ const _resize = (bookInfo, workDirs)=>{
             const resizedPage = path.join(workDirs.resize, path.basename(files[ii]))
             if(!fs.existsSync(resizedPage)){
                 promises.push(()=>{return {
-                    promise: imageMagick.resize(files[ii], min.width, min.height, resizedPage),
+                    promise: imageMagick.resize(files[ii], normal.width, normal.height, resizedPage),
                     message: `Resize left page image (${ii}/${files.length})`
                 }})
             }
